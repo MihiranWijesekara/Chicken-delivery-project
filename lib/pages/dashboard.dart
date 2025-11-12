@@ -120,7 +120,7 @@ class DashboardPage extends StatelessWidget {
             crossAxisCount: 2,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 1.1,
+            childAspectRatio: 0.95, // Changed from 1.1 to 0.95 to give more height
           ),
           itemCount: cards.length,
           itemBuilder: (context, index) {
