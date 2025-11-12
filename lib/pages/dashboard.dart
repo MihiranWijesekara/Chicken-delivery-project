@@ -50,8 +50,8 @@ class DashboardPage extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1976D2),
-                const Color(0xFF2196F3),
+                const Color.fromARGB(255, 26, 11, 167),
+                const Color.fromARGB(255, 21, 5, 196),
               ],
             ),
           ),
@@ -241,7 +241,7 @@ class _DashboardCardState extends State<_DashboardCard>
                     widget.cardData.title,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
@@ -251,7 +251,7 @@ class _DashboardCardState extends State<_DashboardCard>
                     widget.cardData.subtitle,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.9),
-                      fontSize: 13,
+                      fontSize: 15,
                       fontWeight: FontWeight.w400,
                     ),
                   ),
