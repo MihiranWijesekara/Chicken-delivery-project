@@ -479,7 +479,7 @@ class _StockDisplayState extends State<StockDisplay> {
           Icons.add,
         ),
         label: const Text(
-          'Add Sales',
+          'Add Stock',
           style: TextStyle(
             color: Color.fromARGB(255, 18, 16, 16),
             fontWeight: FontWeight.bold,
