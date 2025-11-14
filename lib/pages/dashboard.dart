@@ -1,5 +1,6 @@
 import 'package:chicken_dilivery/pages/Item/itemPage.dart';
 import 'package:chicken_dilivery/pages/sales/thisMonthSales.dart';
+import 'package:chicken_dilivery/pages/stock/stockDisplay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -31,8 +32,11 @@ class DashboardPage extends StatelessWidget {
         color: const Color(0xFF2196F3),
         gradientColors: [const Color(0xFF2196F3), const Color(0xFF42A5F5)],
         onTap: () {
-          // Navigate to Stock page
-          Navigator.pushNamed(context, '/stock');
+          // Navigate to Items page
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const StockDisplay()),
+          );
         },
       ),
       _DashCardData(
