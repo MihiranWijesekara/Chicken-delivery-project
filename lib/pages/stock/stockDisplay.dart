@@ -1,4 +1,5 @@
 import 'package:chicken_dilivery/pages/Item/addItem.dart';
+import 'package:chicken_dilivery/pages/stock/addStock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -470,7 +471,7 @@ class _StockDisplayState extends State<StockDisplay> {
           // Navigate to Add Item page
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddItemPage()),
+            MaterialPageRoute(builder: (context) => const AddStockPage()),
           );
           // handle result if needed
         },
