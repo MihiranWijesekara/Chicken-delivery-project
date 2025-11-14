@@ -211,7 +211,7 @@ class _StockDisplayState extends State<StockDisplay> {
                 child: Row(
                   children: [
                     Expanded(
-                      flex: 3,
+                      flex: 4,
                       child: Text(
                         'Item Name',
                         style: TextStyle(
@@ -222,7 +222,7 @@ class _StockDisplayState extends State<StockDisplay> {
                       ),
                     ),
                     SizedBox(
-                      width: 40,
+                      width: 35,
                       child: Text(
                         'QTY',
                         style: TextStyle(
@@ -234,19 +234,19 @@ class _StockDisplayState extends State<StockDisplay> {
                       ),
                     ),
                     SizedBox(
-                      width: 50,
+                      width: 45,
                       child: Text(
                         'Weight',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 11,
+                          fontSize: 10,
                           color: Colors.grey[800],
                         ),
                         textAlign: TextAlign.right,
                       ),
                     ),
                     SizedBox(
-                      width: 50,
+                      width: 45,
                       child: Text(
                         'Rate',
                         style: TextStyle(
@@ -258,19 +258,19 @@ class _StockDisplayState extends State<StockDisplay> {
                       ),
                     ),
                     SizedBox(
-                      width: 60,
+                      width: 55,
                       child: Text(
                         'Amount',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 11,
+                          fontSize: 10,
                           color: Colors.grey[800],
                         ),
                         textAlign: TextAlign.right,
                       ),
                     ),
                     SizedBox(
-                      width: 55,
+                      width: 45,
                       child: Text(
                         'Stock',
                         style: TextStyle(
@@ -282,13 +282,13 @@ class _StockDisplayState extends State<StockDisplay> {
                       ),
                     ),
                     SizedBox(
-                      width: 50,
+                      width: 60,
                       child: Text(
                         'Action',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 11,
+                          fontSize: 10,
                           color: Colors.grey[800],
                         ),
                       ),
@@ -353,7 +353,7 @@ class _StockDisplayState extends State<StockDisplay> {
                             child: Row(
                               children: [
                                 Expanded(
-                                  flex: 3,
+                                  flex: 4,
                                   child: Text(
                                     item['itemName'] ?? '',
                                     style: TextStyle(
@@ -365,7 +365,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 40,
+                                  width: 35,
                                   child: Text(
                                     '${item['qty'] ?? 0}',
                                     style: TextStyle(
@@ -377,7 +377,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 50,
+                                  width: 45,
                                   child: Text(
                                     '${item['weight'] ?? 0}',
                                     style: TextStyle(
@@ -389,7 +389,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 50,
+                                  width: 45,
                                   child: Text(
                                     '${(item['rate'] ?? 0).toStringAsFixed(0)}',
                                     style: TextStyle(
@@ -401,7 +401,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 60,
+                                  width: 55,
                                   child: Text(
                                     '${(item['amount'] ?? 0).toStringAsFixed(0)}',
                                     style: TextStyle(
@@ -413,7 +413,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 55,
+                                  width: 45,
                                   child: Text(
                                     '${item['remainingStock'] ?? 0}',
                                     style: TextStyle(
@@ -425,7 +425,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 50,
+                                  width: 60,
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
