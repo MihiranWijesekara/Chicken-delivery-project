@@ -15,7 +15,9 @@ class _AddStockPageState extends State<AddStockPage> {
   final _weightController = TextEditingController();
   final _amountController = TextEditingController();
   final _qtyController = TextEditingController();
+  final _dateController = TextEditingController();
   String? _selectedItem;
+  DateTime? _selectedDate;
 
   @override
   void dispose() {
@@ -24,7 +26,23 @@ class _AddStockPageState extends State<AddStockPage> {
     _weightController.dispose();
     _amountController.dispose();
     _qtyController.dispose();
+    _dateController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _dateController.text = '${picked.day}/${picked.month}/${picked.year}';
+      });
+    }
   }
 
   void _saveItem() {
@@ -131,7 +149,7 @@ class _AddStockPageState extends State<AddStockPage> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
+                            color: const Color.fromARGB(255, 0, 0, 0),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -200,7 +218,7 @@ class _AddStockPageState extends State<AddStockPage> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
+                            color: const Color.fromARGB(255, 0, 0, 0),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -275,7 +293,7 @@ class _AddStockPageState extends State<AddStockPage> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
+                            color: const Color.fromARGB(255, 0, 0, 0),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -350,7 +368,7 @@ class _AddStockPageState extends State<AddStockPage> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
+                            color: const Color.fromARGB(255, 0, 0, 0),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -425,7 +443,7 @@ class _AddStockPageState extends State<AddStockPage> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
+                            color: const Color.fromARGB(255, 0, 0, 0),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -460,6 +478,72 @@ class _AddStockPageState extends State<AddStockPage> {
                             }
                             if (int.parse(value) <= 0) {
                               return 'Quantity must be greater than 0';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                 const SizedBox(height: 12),
+                // Date Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.08),
+                        spreadRadius: 0,
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Date',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color.fromARGB(255, 0, 0, 0),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _dateController,
+                          readOnly: true,
+                          style: TextStyle(fontSize: 14),
+                          onTap: () => _selectDate(context),
+                          decoration: InputDecoration(
+                            hintText: 'Select date',
+                            hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                            suffixIcon: Icon(
+                              Icons.calendar_today,
+                              color: Colors.grey[600],
+                              size: 20,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F7FA),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            isDense: true,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please select a date';
                             }
                             return null;
                           },
