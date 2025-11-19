@@ -1,3 +1,6 @@
+import 'package:chicken_dilivery/Model/RootModel.dart';
+import 'package:chicken_dilivery/Model/ShopModel.dart';
+import 'package:chicken_dilivery/database/database_helper.dart';
 import 'package:chicken_dilivery/pages/Managemnt/addShopPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,59 +13,145 @@ class ShopPage extends StatefulWidget {
 }
 
 class _ShopPageState extends State<ShopPage> {
-  // Sample data - replace with your actual data source
-  final List<Map<String, dynamic>> items = [
-    {'id': 1, 'name': 'Shop A', 'Root': 'Root 1', 'VAT Number': '123'},
-    {'id': 2, 'name': 'Shop B', 'Root': 'Root 2', 'VAT Number': '124'},
-    {'id': 3, 'name': 'Shop C', 'Root': 'Root 3', 'VAT Number': '125'},
-    {'id': 4, 'name': 'Shop D', 'Root': 'Root 4', 'VAT Number': '126'},
-    {'id': 5, 'name': 'Shop E', 'Root': 'Root 5', 'VAT Number': '127'},
-  ];
+  List<Shopmodel> shops = [];
+  bool isLoading = true;
 
-  void _editItem(int index) {
-    // Edit item logic
+  @override
+  void initState() {
+    super.initState();
+    _loadShops();
+  }
+
+  Future<void> _loadShops() async {
+    setState(() => isLoading = true);
+    try {
+      final data = await DatabaseHelper.instance.getAllShops();
+      setState(() {
+        shops = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading shops: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _editItem(int index) async {
+    final shop = shops[index];
+    final shopNameController = TextEditingController(text: shop.Shopname);
+    int? selectedRootId = shop.rootId;
+    List<RootModel> roots = [];
+
+    // Load roots for dropdown
+    try {
+      roots = await DatabaseHelper.instance.getAllRoots();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading roots: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Item'),
-        content: Text('Edit ${items[index]['name']}'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Shop'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: shopNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Shop Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
+                value: selectedRootId,
+                decoration: const InputDecoration(
+                  labelText: 'Select Root',
+                  border: OutlineInputBorder(),
+                ),
+                items: roots.map((RootModel root) {
+                  return DropdownMenuItem<int>(
+                    value: root.id,
+                    child: Text(root.name),
+                  );
+                }).toList(),
+                onChanged: (int? newValue) {
+                  setDialogState(() {
+                    selectedRootId = newValue;
+                  });
+                },
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              // Save changes
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (shopNameController.text.trim().isNotEmpty) {
+                  final updatedShop = Shopmodel(
+                    id: shop.id,
+                    Shopname: shopNameController.text.trim(),
+                    rootId: selectedRootId,
+                  );
+
+                  await DatabaseHelper.instance.updateShop(updatedShop);
+                  Navigator.pop(context);
+                  _loadShops();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Shop updated successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _deleteItem(int index) {
+    final shop = shops[index];
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Item'),
-        content: Text('Are you sure you want to delete ${items[index]['name']}?'),
+        title: const Text('Delete Shop'),
+        content: Text('Are you sure you want to delete ${shop.Shopname}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                items.removeAt(index);
-              });
+            onPressed: () async {
+              await DatabaseHelper.instance.deleteShop(shop.id!);
               Navigator.pop(context);
+              _loadShops();
+
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Item deleted successfully'),
+                  content: Text('Shop deleted successfully'),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -115,7 +204,7 @@ class _ShopPageState extends State<ShopPage> {
                     children: [
                       Row(
                         children: [
-                          const SizedBox(width: 40), // Space for back button
+                          const SizedBox(width: 40),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -141,7 +230,7 @@ class _ShopPageState extends State<ShopPage> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0), // Reduced from 20 to 16
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             // Table Header
@@ -188,7 +277,7 @@ class _ShopPageState extends State<ShopPage> {
                       ),
                     ),
                     SizedBox(
-                      width: 70,
+                      width: 100,
                       child: Text(
                         'Root',
                         style: TextStyle(
@@ -198,17 +287,6 @@ class _ShopPageState extends State<ShopPage> {
                         ),
                       ),
                     ),
-                    // SizedBox(
-                    //   width: 80,
-                    //   child: Text(
-                    //     'VAT Number',
-                    //     style: TextStyle(
-                    //       fontWeight: FontWeight.bold,
-                    //       fontSize: 13,
-                    //       color: Colors.grey[800],
-                    //     ),
-                    //   ),
-                    // ),
                     SizedBox(
                       width: 80,
                       child: Text(
@@ -243,121 +321,113 @@ class _ShopPageState extends State<ShopPage> {
                     ),
                   ],
                 ),
-                child: items.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No items available',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: items.length,
-                        separatorBuilder: (context, index) => Divider(
-                          height: 1,
-                          color: Colors.grey[200],
-                        ),
-                        itemBuilder: (context, index) {
-                          final item = items[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            child: Row(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : shops.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SizedBox(
-                                  width: 30,
-                                  child: Text(
-                                    '${index + 1}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
+                                Icon(
+                                  Icons.store_outlined,
+                                  size: 64,
+                                  color: Colors.grey[400],
                                 ),
-                                Expanded(
-                                  flex: 3,
-                                  child: Text(
-                                    item['name'],
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[800],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 70,
-                                  child: Text(
-                                    '${item['Root']}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[800],
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                // SizedBox(
-                                //   width: 80,
-                                //   child: Text(
-                                //     item['VAT Number'],
-                                //     style: TextStyle(
-                                //       fontSize: 13,
-                                //       color: Colors.grey[800],
-                                //     ),
-                                //   ),
-                                // ),
-                                SizedBox(
-                                  width: 80,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      InkWell(
-                                        onTap: () => _editItem(index),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          child: Icon(
-                                            Icons.edit_outlined,
-                                            color: Colors.blue,
-                                            size: 18,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      InkWell(
-                                        onTap: () => _deleteItem(index),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          child: Icon(
-                                            Icons.delete_outline,
-                                            color: Colors.red,
-                                            size: 18,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No shops available',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
                                   ),
                                 ),
                               ],
                             ),
-                          );
-                        },
-                      ),
+                          )
+                        : ListView.separated(
+                            itemCount: shops.length,
+                            separatorBuilder: (context, index) => Divider(
+                              height: 1,
+                              color: Colors.grey[200],
+                            ),
+                            itemBuilder: (context, index) {
+                              final shop = shops[index];
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 30,
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        shop.Shopname,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[800],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 100,
+                                      child: Text(
+                                        shop.rootName ?? 'N/A',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[800],
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 80,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          InkWell(
+                                            onTap: () => _editItem(index),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              child: Icon(
+                                                Icons.edit_outlined,
+                                                color: Colors.blue,
+                                                size: 18,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          InkWell(
+                                            onTap: () => _deleteItem(index),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              child: Icon(
+                                                Icons.delete_outline,
+                                                color: Colors.red,
+                                                size: 18,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
               ),
             ),
           ],
@@ -365,12 +435,13 @@ class _ShopPageState extends State<ShopPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          // Navigate to Add Item page
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const Addshoppage()),
           );
-          // handle result if needed
+          if (result != null) {
+            _loadShops(); // Reload shops after adding
+          }
         },
         backgroundColor: const Color.fromARGB(255, 224, 237, 51),
         icon: const Icon(
@@ -380,7 +451,6 @@ class _ShopPageState extends State<ShopPage> {
           'Add Shop',
           style: TextStyle(
             color: Color.fromARGB(255, 18, 16, 16),
-            // fontSize: 28,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
           ),
