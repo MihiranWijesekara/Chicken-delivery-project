@@ -1,3 +1,5 @@
+import 'package:chicken_dilivery/Model/ItemModel.dart';
+import 'package:chicken_dilivery/database/database_helper.dart';
 import 'package:chicken_dilivery/pages/Item/addItem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,31 +12,90 @@ class ItemPage extends StatefulWidget {
 }
 
 class _ItemPageState extends State<ItemPage> {
-  // Sample data - replace with your actual data source
-  final List<Map<String, dynamic>> items = [
-    {'id': 1, 'name': 'Chicken Breast', 'price': 250.00},
-    {'id': 2, 'name': 'Chicken Legs', 'price': 180.00},
-    {'id': 3, 'name': 'Chicken Wings', 'price': 220.00},
-    {'id': 4, 'name': 'Whole Chicken', 'price': 450.00},
-    {'id': 5, 'name': 'Chicken Liver', 'price': 120.00},
-  ];
+  List<ItemModel> items = [];
+  bool isLoading = true;
 
-  void _editItem(int index) {
-    // Edit item logic
+  @override
+  void initState() {
+    super.initState();
+    _loadItems();
+  }
+
+  Future<void> _loadItems() async {
+    setState(() => isLoading = true);
+    try {
+      final data = await DatabaseHelper.instance.getAllItems();
+      setState(() {
+        items = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading items: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _editItem(int index) async {
+    final item = items[index];
+    final nameController = TextEditingController(text: item.name);
+    final priceController = TextEditingController(text: item.price.toString());
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Edit Item'),
-        content: Text('Edit ${items[index]['name']}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Item Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: priceController,
+              decoration: const InputDecoration(
+                labelText: 'Price',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              // Save changes
-              Navigator.pop(context);
+            onPressed: () async {
+              if (nameController.text.trim().isNotEmpty &&
+                  priceController.text.trim().isNotEmpty) {
+                final updatedItem = ItemModel(
+                  id: item.id,
+                  name: nameController.text.trim(),
+                  price: double.parse(priceController.text.trim()),
+                );
+
+                await DatabaseHelper.instance.updateItem(updatedItem);
+                Navigator.pop(context);
+                _loadItems();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Item updated successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
             },
             child: const Text('Save'),
           ),
@@ -44,22 +105,24 @@ class _ItemPageState extends State<ItemPage> {
   }
 
   void _deleteItem(int index) {
+    final item = items[index];
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Item'),
-        content: Text('Are you sure you want to delete ${items[index]['name']}?'),
+        content: Text('Are you sure you want to delete ${item.name}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                items.removeAt(index);
-              });
+            onPressed: () async {
+              await DatabaseHelper.instance.deleteItem(item.id!);
               Navigator.pop(context);
+              _loadItems();
+
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Item deleted successfully'),
@@ -115,7 +178,7 @@ class _ItemPageState extends State<ItemPage> {
                     children: [
                       Row(
                         children: [
-                          const SizedBox(width: 40), // Space for back button
+                          const SizedBox(width: 40),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -141,7 +204,7 @@ class _ItemPageState extends State<ItemPage> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0), // Reduced from 20 to 16
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             // Table Header
@@ -162,11 +225,11 @@ class _ItemPageState extends State<ItemPage> {
                 ],
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14), // Reduced padding
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                 child: Row(
                   children: [
                     SizedBox(
-                      width: 30, // Fixed width instead of Expanded
+                      width: 30,
                       child: Text(
                         'No.',
                         style: TextStyle(
@@ -188,7 +251,7 @@ class _ItemPageState extends State<ItemPage> {
                       ),
                     ),
                     SizedBox(
-                      width: 70, // Fixed width for price
+                      width: 70,
                       child: Text(
                         'Price',
                         style: TextStyle(
@@ -199,7 +262,7 @@ class _ItemPageState extends State<ItemPage> {
                       ),
                     ),
                     SizedBox(
-                      width: 80, // Fixed width for actions
+                      width: 80,
                       child: Text(
                         'Actions',
                         textAlign: TextAlign.center,
@@ -232,111 +295,113 @@ class _ItemPageState extends State<ItemPage> {
                     ),
                   ],
                 ),
-                child: items.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No items available',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: items.length,
-                        separatorBuilder: (context, index) => Divider(
-                          height: 1,
-                          color: Colors.grey[200],
-                        ),
-                        itemBuilder: (context, index) {
-                          final item = items[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            child: Row(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : items.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SizedBox(
-                                  width: 30,
-                                  child: Text(
-                                    '${index + 1}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 64,
+                                  color: Colors.grey[400],
                                 ),
-                                Expanded(
-                                  flex: 3,
-                                  child: Text(
-                                    item['name'],
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[800],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 70,
-                                  child: Text(
-                                    'RS ${item['price'].toStringAsFixed(0)}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[800],
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 80,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      InkWell(
-                                        onTap: () => _editItem(index),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          child: Icon(
-                                            Icons.edit_outlined,
-                                            color: Colors.blue,
-                                            size: 18,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      InkWell(
-                                        onTap: () => _deleteItem(index),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          child: Icon(
-                                            Icons.delete_outline,
-                                            color: Colors.red,
-                                            size: 18,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No items available',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
                                   ),
                                 ),
                               ],
                             ),
-                          );
-                        },
-                      ),
+                          )
+                        : ListView.separated(
+                            itemCount: items.length,
+                            separatorBuilder: (context, index) => Divider(
+                              height: 1,
+                              color: Colors.grey[200],
+                            ),
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 30,
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        item.name,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[800],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 70,
+                                      child: Text(
+                                        'RS ${item.price.toStringAsFixed(0)}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[800],
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 80,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          InkWell(
+                                            onTap: () => _editItem(index),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              child: Icon(
+                                                Icons.edit_outlined,
+                                                color: Colors.blue,
+                                                size: 18,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          InkWell(
+                                            onTap: () => _deleteItem(index),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              child: Icon(
+                                                Icons.delete_outline,
+                                                color: Colors.red,
+                                                size: 18,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
               ),
             ),
           ],
@@ -344,12 +409,13 @@ class _ItemPageState extends State<ItemPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          // Navigate to Add Item page
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddItemPage()),
           );
-          // handle result if needed
+          if (result != null) {
+            _loadItems(); // Reload items after adding
+          }
         },
         backgroundColor: const Color.fromARGB(255, 224, 237, 51),
         icon: const Icon(
@@ -359,7 +425,6 @@ class _ItemPageState extends State<ItemPage> {
           'Add Item',
           style: TextStyle(
             color: Color.fromARGB(255, 18, 16, 16),
-            // fontSize: 28,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
           ),
