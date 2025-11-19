@@ -1,3 +1,5 @@
+import 'package:chicken_dilivery/Model/RootModel.dart';
+import 'package:chicken_dilivery/database/database_helper.dart';
 import 'package:chicken_dilivery/pages/Managemnt/addRootPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,31 +12,73 @@ class Rootpage extends StatefulWidget {
 }
 
 class _RootpageState extends State<Rootpage> {
-  // Sample data - replace with your actual data source
-  final List<Map<String, dynamic>> items = [
-    {'id': 1, 'name': 'Root A' },
-    {'id': 2, 'name': 'Root B' },
-    {'id': 3, 'name': 'Root C' },
-    {'id': 4, 'name': 'Root D' },
-    {'id': 5, 'name': 'Root E' },
-  ];
+  List<RootModel> roots = [];
+  bool isLoading = true;
 
-  void _editItem(int index) {
-    // Edit item logic
+  @override
+  void initState() {
+    super.initState();
+    _loadRoots();
+  }
+
+  Future<void> _loadRoots() async {
+    setState(() => isLoading = true);
+    try {
+      final data = await DatabaseHelper.instance.getAllRoots();
+      setState(() {
+        roots = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading roots: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _editItem(int index) async {
+    final root = roots[index];
+    final nameController = TextEditingController(text: root.name);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Edit Root'),
-        content: Text('Edit ${items[index]['name']}'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Root Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              // Save changes
-              Navigator.pop(context);
+            onPressed: () async {
+              if (nameController.text.trim().isNotEmpty) {
+                final updatedRoot = RootModel(
+                  id: root.id,
+                  name: nameController.text.trim(),
+                );
+                
+                await DatabaseHelper.instance.updateRoot(updatedRoot);
+                Navigator.pop(context);
+                _loadRoots();
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Root updated successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
             },
             child: const Text('Save'),
           ),
@@ -44,25 +88,27 @@ class _RootpageState extends State<Rootpage> {
   }
 
   void _deleteItem(int index) {
+    final root = roots[index];
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Root'),
-        content: Text('Are you sure you want to delete ${items[index]['name']}?'),
+        content: Text('Are you sure you want to delete ${root.name}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                items.removeAt(index);
-              });
+            onPressed: () async {
+              await DatabaseHelper.instance.deleteRoot(root.id!);
               Navigator.pop(context);
+              _loadRoots();
+              
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Item deleted successfully'),
+                  content: Text('Root deleted successfully'),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -123,7 +169,7 @@ class _RootpageState extends State<Rootpage> {
                                 'Root Management',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 28,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.5,
                                 ),
@@ -141,7 +187,7 @@ class _RootpageState extends State<Rootpage> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0), // Reduced from 20 to 16
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             // Table Header
@@ -221,100 +267,102 @@ class _RootpageState extends State<Rootpage> {
                     ),
                   ],
                 ),
-                child: items.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No items available',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: items.length,
-                        separatorBuilder: (context, index) => Divider(
-                          height: 1,
-                          color: Colors.grey[200],
-                        ),
-                        itemBuilder: (context, index) {
-                          final item = items[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            child: Row(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : roots.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SizedBox(
-                                  width: 30,
-                                  child: Text(
-                                    '${index + 1}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
+                                Icon(
+                                  Icons.route_outlined,
+                                  size: 64,
+                                  color: Colors.grey[400],
                                 ),
-                                Expanded(
-                                  flex: 3,
-                                  child: Text(
-                                    item['name'],
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[800],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 80,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      InkWell(
-                                        onTap: () => _editItem(index),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          child: Icon(
-                                            Icons.edit_outlined,
-                                            color: Colors.blue,
-                                            size: 18,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      InkWell(
-                                        onTap: () => _deleteItem(index),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          child: Icon(
-                                            Icons.delete_outline,
-                                            color: Colors.red,
-                                            size: 18,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No roots available',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
                                   ),
                                 ),
                               ],
                             ),
-                          );
-                        },
-                      ),
+                          )
+                        : ListView.separated(
+                            itemCount: roots.length,
+                            separatorBuilder: (context, index) => Divider(
+                              height: 1,
+                              color: Colors.grey[200],
+                            ),
+                            itemBuilder: (context, index) {
+                              final root = roots[index];
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 30,
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        root.name,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[800],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 80,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          InkWell(
+                                            onTap: () => _editItem(index),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              child: Icon(
+                                                Icons.edit_outlined,
+                                                color: Colors.blue,
+                                                size: 18,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          InkWell(
+                                            onTap: () => _deleteItem(index),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              child: Icon(
+                                                Icons.delete_outline,
+                                                color: Colors.red,
+                                                size: 18,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
               ),
             ),
           ],
@@ -322,17 +370,16 @@ class _RootpageState extends State<Rootpage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          // Navigate to Add Item page
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const Addrootpage()),
           );
-          // handle result if needed
+          if (result != null) {
+            _loadRoots(); // Reload data after adding new root
+          }
         },
         backgroundColor: const Color.fromARGB(255, 224, 237, 51),
-        icon: const Icon(
-          Icons.add,
-        ),
+        icon: const Icon(Icons.add),
         label: const Text(
           'Add Root',
           style: TextStyle(
