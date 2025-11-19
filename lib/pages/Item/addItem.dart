@@ -191,7 +191,7 @@ class _AddItemPageState extends State<AddItemPage> {
                           decoration: InputDecoration(
                             hintText: 'Enter selling rate',
                             hintStyle: TextStyle(color: Colors.grey[400]),
-                            prefixText: '₹ ',
+                            prefixText: 'RS ',
                             prefixStyle: TextStyle(
                               color: Colors.grey[800],
                               fontSize: 16,
