@@ -1,22 +1,21 @@
-import 'package:chicken_dilivery/pages/sales/addSales.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class Thismonthsales extends StatefulWidget {
-  const Thismonthsales({super.key});
+class Todaysales extends StatefulWidget {
+  const Todaysales({super.key});
 
   @override
-  State<Thismonthsales> createState() => _ThismonthsalesState();
+  State<Todaysales> createState() => _TodaysalesState();
 }
 
-class _ThismonthsalesState extends State<Thismonthsales> {
+class _TodaysalesState extends State<Todaysales> {
   // Sample data - replace with your actual data source
   final List<Map<String, dynamic>> items = [
-    {'billNumber': 29, 'date': '2024-11-01', 'shopName': 'Thilina Store', 'kg': 12.380, 'rate': 925.00, 'amount': 11451.00},
-    {'billNumber': 2, 'date': '2024-11-02', 'shopName': 'Super Market B', 'kg': 8.5, 'rate': 180.00, 'amount': 1530.00},
-    {'billNumber': 3, 'date': '2024-11-03', 'shopName': 'Shop C', 'kg': 12.0, 'rate': 220.00, 'amount': 2640.00},
-    {'billNumber': 4, 'date': '2024-11-04', 'shopName': 'Shop D', 'kg': 15.5, 'rate': 450.00, 'amount': 6975.00},
-    {'billNumber': 5, 'date': '2024-11-05', 'shopName': 'Shop E', 'kg': 5.0, 'rate': 120.00, 'amount': 600.00},
+    {'billNumber': 29, 'date': '2024-11-01', 'shopName': 'Thilina Store','Item': '1' ,'kg': 12.380, 'rate': 925.00, 'amount': 125000.00},
+    {'billNumber': 2, 'date': '2024-11-02', 'shopName': 'Super Market B','Item': '1' , 'kg': 8.5, 'rate': 180.00, 'amount': 1530.00},
+    {'billNumber': 3, 'date': '2024-11-03', 'shopName': 'Shop C', 'Item': '1' , 'kg': 120.0, 'rate': 220.00, 'amount': 2640.00},
+    {'billNumber': 4, 'date': '2024-11-04', 'shopName': 'Shop D', 'Item': '1' , 'kg': 15.5, 'rate': 450.00, 'amount': 6975.00},
+    {'billNumber': 5, 'date': '2024-11-05', 'shopName': 'Shop E', 'Item': '1' , 'kg': 5.0, 'rate': 120.00, 'amount': 600.00},
   ];
 
   void _editItem(int index) {
@@ -120,7 +119,7 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'This Month Sales',
+                                'Today Sales',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
@@ -146,48 +145,45 @@ class _ThismonthsalesState extends State<Thismonthsales> {
           children: [
             Container(
               padding: const EdgeInsets.fromLTRB(5, 5, 5, 8),
-            child: TextField(
-              // controller: _searchController,
-              // onChanged: _filterItems,
-              decoration: InputDecoration(
-                hintText: 'Search by shop name, bill number',
-                hintStyle: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[400],
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: Colors.grey[600],
-                ),
-                suffixIcon: null,
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Colors.grey[300]!,
-                    width: 1,
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search by shop name, bill number',
+                  hintStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[400],
                   ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: const Color.fromARGB(255, 26, 11, 167),
-                    width: 2,
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Colors.grey[600],
                   ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                  suffixIcon: null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.grey[300]!,
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color.fromARGB(255, 26, 11, 167),
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ),
-          ),
-
 
             // Table Header
             Container(
@@ -211,7 +207,7 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                 child: Row(
                   children: [
                     SizedBox(
-                      width: 35,
+                      width: 28,
                       child: Text(
                         'Bill',
                         style: TextStyle(
@@ -222,7 +218,7 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                       ),
                     ),
                     SizedBox(
-                      width: 50,
+                      width: 42,
                       child: Text(
                         'Date',
                         style: TextStyle(
@@ -233,6 +229,7 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                       ),
                     ),
                     Expanded(
+                      flex: 2,
                       child: Text(
                         'Shop Name',
                         style: TextStyle(
@@ -243,7 +240,18 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                       ),
                     ),
                     SizedBox(
-                      width: 45,
+                      width: 30,
+                      child: Text(
+                        'Item',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 40,
                       child: Text(
                         'KG',
                         style: TextStyle(
@@ -255,7 +263,7 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                       ),
                     ),
                     SizedBox(
-                      width: 50,
+                      width: 42,
                       child: Text(
                         'Rate',
                         style: TextStyle(
@@ -267,7 +275,7 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                       ),
                     ),
                     SizedBox(
-                      width: 60,
+                      width: 55,
                       child: Text(
                         'Amount',
                         style: TextStyle(
@@ -341,7 +349,6 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                         ),
                         itemBuilder: (context, index) {
                           final item = items[index];
-                          // Format date to show only day-month (e.g., 01-11)
                           String formattedDate = '';
                           if (item['date'] != null && item['date'].toString().length >= 10) {
                             formattedDate = item['date'].toString().substring(5, 10).replaceAll('-', '/');
@@ -352,23 +359,23 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
-                              vertical: 10,
+                              vertical: 8,
                             ),
                             child: Row(
                               children: [
                                 SizedBox(
-                                  width: 35,
+                                  width: 28,
                                   child: Text(
                                     '${item['billNumber'] ?? ''}',
                                     style: TextStyle(
-                                       fontSize: 10,
+                                      fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 50,
+                                  width: 42,
                                   child: Text(
                                     formattedDate,
                                     style: TextStyle(
@@ -379,6 +386,7 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                                   ),
                                 ),
                                 Expanded(
+                                  flex: 2,
                                   child: Text(
                                     item['shopName'] ?? '',
                                     style: TextStyle(
@@ -390,11 +398,23 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 45,
+                                  width: 30,
+                                  child: Text(
+                                    item['Item'] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: const Color.fromARGB(255, 0, 0, 0),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 40,
                                   child: Text(
                                     '${item['kg'] ?? 0}',
                                     style: TextStyle(
-                                       fontSize: 10,
+                                      fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -402,7 +422,7 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 50,
+                                  width: 42,
                                   child: Text(
                                     '${(item['rate'] ?? 0).toStringAsFixed(0)}',
                                     style: TextStyle(
@@ -414,11 +434,11 @@ class _ThismonthsalesState extends State<Thismonthsales> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 60,
+                                  width: 55,
                                   child: Text(
                                     '${(item['amount'] ?? 0).toStringAsFixed(0)}',
                                     style: TextStyle(
-                                       fontSize: 10,
+                                      fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -464,28 +484,6 @@ class _ThismonthsalesState extends State<Thismonthsales> {
               ),
             ),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          // Navigate to Add Item page
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const Addsales()),
-          );
-          // handle result if needed
-        },
-        backgroundColor: const Color.fromARGB(255, 224, 237, 51),
-        icon: const Icon(
-          Icons.add,
-        ),
-        label: const Text(
-          'Add Sales',
-          style: TextStyle(
-            color: Color.fromARGB(255, 18, 16, 16),
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
         ),
       ),
     );

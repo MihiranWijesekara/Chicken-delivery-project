@@ -1,6 +1,8 @@
-import 'package:chicken_dilivery/pages/Item/itemPage.dart';
+
 import 'package:chicken_dilivery/pages/Managemnt/rootPage.dart';
 import 'package:chicken_dilivery/pages/Managemnt/shopPage.dart';
+import 'package:chicken_dilivery/pages/sales/addSales.dart';
+import 'package:chicken_dilivery/pages/sales/todaySales.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -21,7 +23,7 @@ class SalesDashboard extends StatelessWidget {
           // Navigate to Items page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const ItemPage()),
+            MaterialPageRoute(builder: (context) => const Todaysales()),
           );
         },
       ),
@@ -158,6 +160,28 @@ class SalesDashboard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          // Navigate to Add Item page
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const Addsales()),
+          );
+          // handle result if needed
+        },
+        backgroundColor: const Color.fromARGB(255, 224, 237, 51),
+        icon: const Icon(
+          Icons.add,
+        ),
+        label: const Text(
+          'Add Sales',
+          style: TextStyle(
+            color: Color.fromARGB(255, 18, 16, 16),
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
     );
@@ -356,6 +380,7 @@ class _DashboardCardState extends State<_DashboardCard>
           ),
         ),
       ),
+      
     );
   }
 }
