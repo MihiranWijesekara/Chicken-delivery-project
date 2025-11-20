@@ -32,6 +32,9 @@ class _AddsalesState extends State<Addsales> {
   void initState() {
     super.initState();
     _loadItems();
+    // Set today's date as default
+    _selectedDate = DateTime.now();
+    _dateController.text = '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}';
   }
 
   @override
@@ -78,6 +81,19 @@ class _AddsalesState extends State<Addsales> {
         _dateController.text = '${picked.day}/${picked.month}/${picked.year}';
       });
     }
+  }
+
+   void _onItemSelected(int? itemId) {
+    if (itemId == null) return;
+    
+    // Find the selected item
+    final selectedItem = _items.firstWhere((item) => item.id == itemId);
+    
+    // Auto-fill the selling rate
+    setState(() {
+      _selectedItemId = itemId;
+      _sellingRateController.text = selectedItem.price.toStringAsFixed(2);
+    });
   }
 
   void _saveItem() {
@@ -269,11 +285,7 @@ class _AddsalesState extends State<Addsales> {
                         const SizedBox(height: 6),
                         DropdownButtonFormField<int>(
                           value: _selectedItemId,
-                          onChanged: (int? newValue) {
-                            setState(() {
-                              _selectedItemId = newValue;
-                            });
-                          },
+                         onChanged: _onItemSelected,
                           decoration: InputDecoration(
                             hintText: 'Select Item',
                             hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
@@ -357,7 +369,7 @@ class _AddsalesState extends State<Addsales> {
                           controller: _sellingRateController,
                           keyboardType: TextInputType.number,
                           style: TextStyle(fontSize: 14),
-                          inputFormatters: [
+                           inputFormatters: [
                             FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                           ],
                           decoration: InputDecoration(
@@ -675,6 +687,78 @@ class _AddsalesState extends State<Addsales> {
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 10),
+                // Shop name Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.08),
+                        spreadRadius: 0,
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'VAT Number',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color.fromARGB(255, 0, 0, 0),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _shopNameController,
+                          style: TextStyle(fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Enter VAT number',
+                            hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F7FA),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              borderSide: BorderSide(
+                                color: Colors.black,
+                                width: 1,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              borderSide: BorderSide(
+                                color: Colors.black,
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              borderSide: BorderSide(
+                                color: Colors.black,
+                                width: 1.5,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            isDense: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 10),
                 // Date Field
                 Container(
@@ -708,14 +792,14 @@ class _AddsalesState extends State<Addsales> {
                         TextFormField(
                           controller: _dateController,
                           readOnly: true,
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                           onTap: () => _selectDate(context),
                           decoration: InputDecoration(
                             hintText: 'Select date',
                             hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
                             suffixIcon: Icon(
                               Icons.calendar_today,
-                              color: Colors.grey[600],
+                              color: const Color.fromARGB(255, 26, 11, 167),
                               size: 20,
                             ),
                             filled: true,
@@ -737,7 +821,7 @@ class _AddsalesState extends State<Addsales> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(6),
                               borderSide: BorderSide(
-                                color: Colors.black,
+                                color: const Color.fromARGB(255, 26, 11, 167),
                                 width: 1.5,
                               ),
                             ),
@@ -797,3 +881,7 @@ class _AddsalesState extends State<Addsales> {
     );
   }
 }
+
+// 2- Root select karanna karamyk ona e wagema e select karana root ekata adala shop witharak display wenna ona wenna ona
+// 3 - Auto bill number genarate karanna ona
+

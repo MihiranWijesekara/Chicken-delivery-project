@@ -387,3 +387,4 @@ class _DashboardCardState extends State<_DashboardCard>
     );
   }
 }
+
