@@ -1,4 +1,4 @@
-class StockModel{
+class StockModel {
   final int? id;
   final int item_id;
   final int stock_price;
@@ -6,37 +6,42 @@ class StockModel{
   final double? remain_quantity;
   final double? amount;
   final String? added_date;
-StockModel({
-  this.id,
-  required this.item_id,
-  required this.stock_price,
-  this.quantity_kg,
-  this.remain_quantity,
-  this.amount,
-  this.added_date,
-});
+  final String? item_name; // NEW
 
-Map<String, dynamic> toMap() {
-  return {
-    'id': id,
-    'item_id': item_id,
-    'stock_price': stock_price,
-    'quantity_kg': quantity_kg,
-    'remain_quantity': remain_quantity,
-    'amount': amount,
-    'added_date': added_date,
-  };
-}
-factory StockModel.fromMap(Map<String, dynamic> map) {
-  return StockModel(
-    id: map['id'],
-    item_id: map['item_id'],
-    stock_price: map['stock_price'],
-    quantity_kg: map['quantity_kg'],
-    remain_quantity: map['remain_quantity'],
-    amount: map['amount'],
-    added_date: map['added_date'],
-  );
-}
+  StockModel({
+    this.id,
+    required this.item_id,
+    required this.stock_price,
+    this.quantity_kg,
+    this.remain_quantity,
+    this.amount,
+    this.added_date,
+    this.item_name, // NEW
+  });
 
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'item_id': item_id,
+      'stock_price': stock_price,
+      'quantity_kg': quantity_kg,
+      'remain_quantity': remain_quantity,
+      'amount': amount,
+      'added_date': added_date,
+      // item_name is from JOIN, not stored in Stock table
+    };
+  }
+
+  factory StockModel.fromMap(Map<String, dynamic> map) {
+    return StockModel(
+      id: map['id'],
+      item_id: map['item_id'],
+      stock_price: map['stock_price'],
+      quantity_kg: map['quantity_kg'],
+      remain_quantity: (map['remain_quantity'] as num?)?.toDouble(),
+      amount: (map['amount'] as num?)?.toDouble(),
+      added_date: map['added_date'],
+      item_name: map['item_name'], // NEW
+    );
+  }
 }

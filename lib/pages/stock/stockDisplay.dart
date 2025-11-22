@@ -1,3 +1,6 @@
+import 'package:chicken_dilivery/Model/ItemModel.dart';
+import 'package:chicken_dilivery/Model/StockModel.dart';
+import 'package:chicken_dilivery/database/database_helper.dart';
 import 'package:chicken_dilivery/pages/Item/addItem.dart';
 import 'package:chicken_dilivery/pages/stock/addStock.dart';
 import 'package:flutter/material.dart';
@@ -12,34 +15,192 @@ class StockDisplay extends StatefulWidget {
 
 class _StockDisplayState extends State<StockDisplay> {
   // Sample data - replace with your actual data source
-  final List<Map<String, dynamic>> items = [
-    {'itemName': 'Chicken Breast', 'qty': 10, 'weight': 12.5, 'rate': 925.00, 'amount': 11562.50, 'remainingStock': 25},
-    {'itemName': 'Chicken Wings', 'qty': 15, 'weight': 8.5, 'rate': 750.00, 'amount': 6375.00, 'remainingStock': 40},
-    {'itemName': 'Chicken Legs', 'qty': 8, 'weight': 10.0, 'rate': 850.00, 'amount': 8500.00, 'remainingStock': 18},
-    {'itemName': 'Whole Chicken', 'qty': 5, 'weight': 15.5, 'rate': 1200.00, 'amount': 18600.00, 'remainingStock': 10},
-    {'itemName': 'Chicken Thighs', 'qty': 12, 'weight': 9.0, 'rate': 800.00, 'amount': 7200.00, 'remainingStock': 30},
-  ];
+  // final List<Map<String, dynamic>> items = [
+  //   {'itemName': 'Chicken Breast', 'qty': 10, 'weight': 12.5, 'rate': 925.00, 'amount': 11562.50, 'remainingStock': 25},
+  //   {'itemName': 'Chicken Wings', 'qty': 15, 'weight': 8.5, 'rate': 750.00, 'amount': 6375.00, 'remainingStock': 40},
+  //   {'itemName': 'Chicken Legs', 'qty': 8, 'weight': 10.0, 'rate': 850.00, 'amount': 8500.00, 'remainingStock': 18},
+  //   {'itemName': 'Whole Chicken', 'qty': 5, 'weight': 15.5, 'rate': 1200.00, 'amount': 18600.00, 'remainingStock': 10},
+  //   {'itemName': 'Chicken Thighs', 'qty': 12, 'weight': 9.0, 'rate': 800.00, 'amount': 7200.00, 'remainingStock': 30},
+  // ];
 
-  void _editItem(int index) {
-    // Edit item logic
+    List<StockModel> stocks = [];
+  List<ItemModel> _items = []; // NEW
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadItems();              // NEW
+    _loadStocks();
+  }
+
+  Future<void> _loadItems() async {            // NEW
+    try {
+      final data = await DatabaseHelper.instance.getAllItems();
+      setState(() => _items = data);
+    } catch (_) {}
+  }
+
+  Future<void> _loadStocks() async {
+    setState(() => isLoading = true);
+    try {
+      final data = await DatabaseHelper.instance.getAllStock();
+      setState(() {
+        stocks = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading shops: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // REPLACE old _editItem with _editStock
+  void _editStock(int index) async {
+    final stock = stocks[index];
+
+    int? selectedItemId = stock.item_id;
+    final qtyController = TextEditingController(text: stock.quantity_kg?.toString() ?? '');
+    final rateController = TextEditingController(text: stock.stock_price.toString());
+    final amountController = TextEditingController(
+        text: (stock.amount ?? (stock.stock_price * (stock.quantity_kg ?? 0))).toString());
+    final remainController = TextEditingController(text: stock.remain_quantity?.toString() ?? '');
+    final dateController = TextEditingController(text: stock.added_date ?? '');
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Item'),
-        content: Text('Edit ${items[index]['itemName']}'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              // Save changes
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
-        ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Stock'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<int>(
+                    value: selectedItemId,
+                    decoration: const InputDecoration(
+                      labelText: 'Item',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _items.map((item) {
+                      return DropdownMenuItem<int>(
+                        value: item.id,
+                        child: Text(item.name),
+                      );
+                    }).toList(),
+                    onChanged: (v) => setDialogState(() => selectedItemId = v),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: qtyController,
+                    decoration: const InputDecoration(
+                      labelText: 'Quantity (Kg)',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setDialogState(() {
+                      final q = int.tryParse(qtyController.text) ?? 0;
+                      final r = double.tryParse(rateController.text) ?? 0;
+                      amountController.text = (q * r).toStringAsFixed(2);
+                      if (remainController.text.isEmpty) {
+                        remainController.text = q.toString();
+                      }
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: rateController,
+                    decoration: const InputDecoration(
+                      labelText: 'Rate',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setDialogState(() {
+                      final q = int.tryParse(qtyController.text) ?? 0;
+                      final r = double.tryParse(rateController.text) ?? 0;
+                      amountController.text = (q * r).toStringAsFixed(2);
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: amountController,
+                    decoration: const InputDecoration(
+                      labelText: 'Amount',
+                      border: OutlineInputBorder(),
+                    ),
+                    readOnly: true,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: remainController,
+                    decoration: const InputDecoration(
+                      labelText: 'Remain Stock',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: dateController,
+                    decoration: const InputDecoration(
+                      labelText: 'Date',
+                      border: OutlineInputBorder(),
+                    ),
+                    readOnly: true,
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2101),
+                      );
+                      if (picked != null) {
+                        setDialogState(() {
+                          dateController.text =
+                              '${picked.day}/${picked.month}/${picked.year}';
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (selectedItemId == null) return;
+                final updated = StockModel(
+                  id: stock.id,
+                  item_id: selectedItemId!,
+                  stock_price: int.tryParse(rateController.text) ?? stock.stock_price,
+                  quantity_kg: int.tryParse(qtyController.text),
+                  remain_quantity: double.tryParse(remainController.text),
+                  amount: double.tryParse(amountController.text),
+                  added_date: dateController.text,
+                );
+                await DatabaseHelper.instance.updateStock(updated);
+                Navigator.pop(context);
+                await _loadStocks();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Stock updated'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -49,7 +210,7 @@ class _StockDisplayState extends State<StockDisplay> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Item'),
-        content: Text('Are you sure you want to delete ${items[index]['itemName']}?'),
+        content: Text('Are you sure you want to delete ${stocks[index].item_name}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -58,7 +219,7 @@ class _StockDisplayState extends State<StockDisplay> {
           TextButton(
             onPressed: () {
               setState(() {
-                items.removeAt(index);
+                stocks.removeAt(index);
               });
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -145,51 +306,6 @@ class _StockDisplayState extends State<StockDisplay> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-          //   Container(
-          //     padding: const EdgeInsets.fromLTRB(5, 5, 5, 8),
-          //   child: TextField(
-          //     // controller: _searchController,
-          //     // onChanged: _filterItems,
-          //     decoration: InputDecoration(
-          //       hintText: 'Search by item name',
-          //       hintStyle: TextStyle(
-          //         fontSize: 14,
-          //         color: Colors.grey[400],
-          //       ),
-          //       prefixIcon: Icon(
-          //         Icons.search,
-          //         color: Colors.grey[600],
-          //       ),
-          //       suffixIcon: null,
-          //       filled: true,
-          //       fillColor: Colors.white,
-          //       border: OutlineInputBorder(
-          //         borderRadius: BorderRadius.circular(12),
-          //         borderSide: BorderSide.none,
-          //       ),
-          //       enabledBorder: OutlineInputBorder(
-          //         borderRadius: BorderRadius.circular(12),
-          //         borderSide: BorderSide(
-          //           color: Colors.grey[300]!,
-          //           width: 1,
-          //         ),
-          //       ),
-          //       focusedBorder: OutlineInputBorder(
-          //         borderRadius: BorderRadius.circular(12),
-          //         borderSide: BorderSide(
-          //           color: const Color.fromARGB(255, 26, 11, 167),
-          //           width: 2,
-          //         ),
-          //       ),
-          //       contentPadding: const EdgeInsets.symmetric(
-          //         horizontal: 16,
-          //         vertical: 12,
-          //       ),
-          //     ),
-          //   ),
-          // ),
-
-
             // Table Header
             Container(
               decoration: BoxDecoration(
@@ -316,7 +432,7 @@ class _StockDisplayState extends State<StockDisplay> {
                     ),
                   ],
                 ),
-                child: items.isEmpty
+                child: stocks.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -338,13 +454,13 @@ class _StockDisplayState extends State<StockDisplay> {
                         ),
                       )
                     : ListView.separated(
-                        itemCount: items.length,
+                        itemCount: stocks.length,
                         separatorBuilder: (context, index) => Divider(
                           height: 1,
                           color: Colors.grey[200],
                         ),
                         itemBuilder: (context, index) {
-                          final item = items[index];
+                          final stock = stocks[index];
                           
                           return Padding(
                             padding: const EdgeInsets.symmetric(
@@ -356,7 +472,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                 Expanded(
                                   flex: 4,
                                   child: Text(
-                                    item['itemName'] ?? '',
+                                    stock.item_name ?? '',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -365,10 +481,23 @@ class _StockDisplayState extends State<StockDisplay> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                // SizedBox(
+                                //   width: 35,
+                                //   child: Text(
+                                //     '${stock['qty'] ?? 0}',
+                                //     stock.remain_quantity?.toString() ?? 'N/A',
+                                //     style: TextStyle(
+                                //       fontSize: 10,
+                                //       color: const Color.fromARGB(255, 0, 0, 0),
+                                //       fontWeight: FontWeight.w700,
+                                //     ),
+                                //     textAlign: TextAlign.right,
+                                //   ),
+                                // ),
                                 SizedBox(
-                                  width: 35,
+                                  width: 45,
                                   child: Text(
-                                    '${item['qty'] ?? 0}',
+                                    stock.quantity_kg?.toString() ?? 'N/A',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -380,19 +509,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                 SizedBox(
                                   width: 45,
                                   child: Text(
-                                    '${item['weight'] ?? 0}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: const Color.fromARGB(255, 0, 0, 0),
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 45,
-                                  child: Text(
-                                    '${(item['rate'] ?? 0).toStringAsFixed(0)}',
+                                    stock.stock_price?.toString() ?? 'N/A',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -404,7 +521,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                 SizedBox(
                                   width: 55,
                                   child: Text(
-                                    '${(item['amount'] ?? 0).toStringAsFixed(0)}',
+                                    stock.amount?.toString() ?? 'N/A',
                                     style: TextStyle(
                                        fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -416,7 +533,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                 SizedBox(
                                   width: 45,
                                   child: Text(
-                                    '${item['remainingStock'] ?? 0}',
+                                    stock.remain_quantity?.toString() ?? 'N/A',
                                     style: TextStyle(
                                        fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -431,7 +548,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       InkWell(
-                                        onTap: () => _editItem(index),
+                                        onTap: () => _editStock(index),
                                         child: Container(
                                           padding: const EdgeInsets.all(4),
                                           child: Icon(

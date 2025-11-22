@@ -187,12 +187,12 @@ class DatabaseHelper {
   Future<List<StockModel>> getAllStock() async {
     final db = await database;
     final result = await db.rawQuery('''
-      SELECT Stock.*, items.name as item_name 
+      SELECT Stock.*, items.name as item_name
       FROM Stock
       LEFT JOIN items ON Stock.item_id = items.id
       ORDER BY Stock.id ASC
     ''');
-    return result.map((map) => StockModel.fromMap(map)).toList();
+    return result.map((m) => StockModel.fromMap(m)).toList();
   }
 
   // Update item
