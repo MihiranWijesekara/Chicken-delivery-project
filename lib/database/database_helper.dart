@@ -23,10 +23,10 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4, // Increased version
+      version: 5, // bump version for amount column
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
-      onDowngrade: onDatabaseDowngradeDelete, // Optional: handle downgrade
+      onDowngrade: onDatabaseDowngradeDelete,
     );
   }
 
@@ -62,6 +62,7 @@ class DatabaseHelper {
         stock_price INTEGER NOT NULL,
         quantity_kg INTEGER,
         remain_quantity REAL,
+        amount REAL DEFAULT 0,            -- NEW COLUMN
         added_date TEXT,
         FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE SET NULL
       )
@@ -69,7 +70,6 @@ class DatabaseHelper {
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Use if-else if chain to handle incremental upgrades
     if (oldVersion < 2) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS roots (
@@ -78,7 +78,7 @@ class DatabaseHelper {
         )
       ''');
     }
-    
+
     if (oldVersion < 3) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS shops (
@@ -89,7 +89,7 @@ class DatabaseHelper {
         )
       ''');
     }
-    
+
     if (oldVersion < 4) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS Stock (
@@ -102,6 +102,15 @@ class DatabaseHelper {
           FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE SET NULL
         )
       ''');
+    }
+
+    // Migration to add amount column
+    if (oldVersion < 5) {
+      final columns = await db.rawQuery('PRAGMA table_info(Stock)');
+      final hasAmount = columns.any((c) => c['name'] == 'amount');
+      if (!hasAmount) {
+        await db.execute('ALTER TABLE Stock ADD COLUMN amount REAL DEFAULT 0');
+      }
     }
   }
 

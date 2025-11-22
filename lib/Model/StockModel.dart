@@ -4,6 +4,7 @@ class StockModel{
   final int stock_price;
   final int? quantity_kg;
   final double? remain_quantity;
+  final double? amount;
   final String? added_date;
 StockModel({
   this.id,
@@ -11,6 +12,7 @@ StockModel({
   required this.stock_price,
   this.quantity_kg,
   this.remain_quantity,
+  this.amount,
   this.added_date,
 });
 
@@ -21,6 +23,7 @@ Map<String, dynamic> toMap() {
     'stock_price': stock_price,
     'quantity_kg': quantity_kg,
     'remain_quantity': remain_quantity,
+    'amount': amount,
     'added_date': added_date,
   };
 }
@@ -31,6 +34,7 @@ factory StockModel.fromMap(Map<String, dynamic> map) {
     stock_price: map['stock_price'],
     quantity_kg: map['quantity_kg'],
     remain_quantity: map['remain_quantity'],
+    amount: map['amount'],
     added_date: map['added_date'],
   );
 }

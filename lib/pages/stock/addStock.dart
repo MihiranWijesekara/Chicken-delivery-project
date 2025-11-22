@@ -1,3 +1,6 @@
+import 'package:chicken_dilivery/Model/StockModel.dart';
+import 'package:chicken_dilivery/database/database_helper.dart';
+import 'package:chicken_dilivery/Model/ItemModel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,7 +19,8 @@ class _AddStockPageState extends State<AddStockPage> {
   final _amountController = TextEditingController();
   final _qtyController = TextEditingController();
   final _dateController = TextEditingController();
-  String? _selectedItem;
+  List<ItemModel> _items = [];
+  int? _selectedItemId; // was String? _selectedItem
   DateTime? _selectedDate;
 
   @override
@@ -36,6 +40,14 @@ class _AddStockPageState extends State<AddStockPage> {
     _selectedDate = DateTime.now();
     _dateController.text =
         '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}';
+    _loadItems(); // NEW
+  }
+
+  Future<void> _loadItems() async {
+    final items = await DatabaseHelper.instance.getAllItems();
+    setState(() {
+      _items = items;
+    });
   }
 
  Future<void> _selectDate(BuildContext context) async {
@@ -53,24 +65,30 @@ class _AddStockPageState extends State<AddStockPage> {
     }
   }
 
-  void _saveItem() {
+  void _saveItem() async {
     if (_formKey.currentState!.validate()) {
-      // Save item logic here
-      final itemName = _itemNameController.text;
+      final itemId = _selectedItemId;                  // NEW
       final sellingRate = double.parse(_sellingRateController.text);
+      final weight = double.parse(_weightController.text);
+      final amount = double.parse(_amountController.text);
+      final date = _dateController.text;
 
-      // Return the data to previous screen
+      final newStock = StockModel(
+        item_id: itemId!,
+        stock_price: sellingRate.toInt(),
+        quantity_kg: weight.toInt(),
+        amount: amount,
+        remain_quantity: weight,
+        added_date: date,
+      );
+      await DatabaseHelper.instance.insertStock(newStock); // persist
+
       Navigator.pop(context, {
-        'name': itemName,
+        'itemId': itemId,
         'price': sellingRate,
-        'selectedItem': _selectedItem,
       });
-
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Item added successfully'),
-          backgroundColor: Colors.green,
-        ),
+        const SnackBar(content: Text('Stock saved'), backgroundColor: Colors.green),
       );
     }
   }
@@ -161,8 +179,8 @@ class _AddStockPageState extends State<AddStockPage> {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        DropdownButtonFormField<String>(
-                          value: _selectedItem,
+                        DropdownButtonFormField<int>(
+                          value: _selectedItemId,
                           decoration: InputDecoration(
                             hintText: 'Select Item',
                             hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
@@ -195,20 +213,19 @@ class _AddStockPageState extends State<AddStockPage> {
                             ),
                             isDense: true,
                           ),
-                          items: <String>['Item 1', 'Item 2', 'Item 3']
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value, style: TextStyle(fontSize: 14)),
+                          items: _items.map((item) {
+                            return DropdownMenuItem<int>(
+                              value: item.id,
+                              child: Text(item.name, style: const TextStyle(fontSize: 14)),
                             );
                           }).toList(),
-                          onChanged: (String? newValue) {
+                          onChanged: (int? newValue) {
                             setState(() {
-                              _selectedItem = newValue;
+                              _selectedItemId = newValue;
                             });
                           },
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
+                            if (value == null) {
                               return 'Please select an item';
                             }
                             return null;
