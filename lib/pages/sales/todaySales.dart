@@ -1,3 +1,5 @@
+import 'package:chicken_dilivery/Model/salesModel.dart';
+import 'package:chicken_dilivery/database/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,22 +11,44 @@ class Todaysales extends StatefulWidget {
 }
 
 class _TodaysalesState extends State<Todaysales> {
-  // Sample data - replace with your actual data source
-  final List<Map<String, dynamic>> items = [
-    {'billNumber': 29, 'date': '2024-11-01', 'shopName': 'Thilina Store','Item': '1' ,'kg': 12.380, 'rate': 925.00, 'amount': 125000.00},
-    {'billNumber': 2, 'date': '2024-11-02', 'shopName': 'Super Market B','Item': '1' , 'kg': 8.5, 'rate': 180.00, 'amount': 1530.00},
-    {'billNumber': 3, 'date': '2024-11-03', 'shopName': 'Shop C', 'Item': '1' , 'kg': 120.0, 'rate': 220.00, 'amount': 2640.00},
-    {'billNumber': 4, 'date': '2024-11-04', 'shopName': 'Shop D', 'Item': '1' , 'kg': 15.5, 'rate': 450.00, 'amount': 6975.00},
-    {'billNumber': 5, 'date': '2024-11-05', 'shopName': 'Shop E', 'Item': '1' , 'kg': 5.0, 'rate': 120.00, 'amount': 600.00},
-  ];
+   List<Salesmodel> sales = [];
+   bool isLoading = false;
+
+    @override
+  void initState() {
+    super.initState();
+    _loadStocks();
+  }
+
+  
+  Future<void> _loadStocks() async {
+    setState(() => isLoading = true);
+    try {
+      final data = await DatabaseHelper.instance.getTodaySales(); // NEW method
+      print('Loaded sales data: $data');
+      setState(() {
+        sales = data.map((map) => Salesmodel.fromMap(map)).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading sales: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   void _editItem(int index) {
+    final sales = this.sales[index];
     // Edit item logic
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Edit Item'),
-        content: Text('Edit ${items[index]['shopName']}'),
+        content: Text('Edit ${sales.shopName ?? 'Null'} details here.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -47,7 +71,7 @@ class _TodaysalesState extends State<Todaysales> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Item'),
-        content: Text('Are you sure you want to delete ${items[index]['shopName']}?'),
+        content: Text('Are you sure you want to delete ${sales[index].shopName ?? ''}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -56,7 +80,7 @@ class _TodaysalesState extends State<Todaysales> {
           TextButton(
             onPressed: () {
               setState(() {
-                items.removeAt(index);
+                sales.removeAt(index);
               });
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -320,7 +344,7 @@ class _TodaysalesState extends State<Todaysales> {
                     ),
                   ],
                 ),
-                child: items.isEmpty
+                child: sales.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -342,16 +366,16 @@ class _TodaysalesState extends State<Todaysales> {
                         ),
                       )
                     : ListView.separated(
-                        itemCount: items.length,
+                        itemCount: sales.length,
                         separatorBuilder: (context, index) => Divider(
                           height: 1,
                           color: Colors.grey[200],
                         ),
                         itemBuilder: (context, index) {
-                          final item = items[index];
+                          final Sales = sales[index];
                           String formattedDate = '';
-                          if (item['date'] != null && item['date'].toString().length >= 10) {
-                            formattedDate = item['date'].toString().substring(5, 10).replaceAll('-', '/');
+                          if (Sales.addedDate != null && Sales.addedDate.toString().length >= 10) {
+                            formattedDate = Sales.addedDate.toString().substring(5, 10).replaceAll('-', '/');
                           } else {
                             formattedDate = 'N/A';
                           }
@@ -366,7 +390,7 @@ class _TodaysalesState extends State<Todaysales> {
                                 SizedBox(
                                   width: 28,
                                   child: Text(
-                                    '${item['billNumber'] ?? ''}',
+                                    Sales.billNo?.toString() ?? 'N/A',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -388,7 +412,7 @@ class _TodaysalesState extends State<Todaysales> {
                                 Expanded(
                                   flex: 2,
                                   child: Text(
-                                    item['shopName'] ?? '',
+                                    Sales.shopName ?? '',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -400,7 +424,8 @@ class _TodaysalesState extends State<Todaysales> {
                                 SizedBox(
                                   width: 30,
                                   child: Text(
-                                    item['Item'] ?? '',
+                                    Sales.itemId.toString(),
+                                    
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -412,7 +437,8 @@ class _TodaysalesState extends State<Todaysales> {
                                 SizedBox(
                                   width: 40,
                                   child: Text(
-                                    '${item['kg'] ?? 0}',
+                                    Sales.quantityKg?.toString() ?? '0',
+                                    
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -424,7 +450,8 @@ class _TodaysalesState extends State<Todaysales> {
                                 SizedBox(
                                   width: 42,
                                   child: Text(
-                                    '${(item['rate'] ?? 0).toStringAsFixed(0)}',
+                                    Sales.sellingPrice.toString(),
+                                    
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -436,7 +463,8 @@ class _TodaysalesState extends State<Todaysales> {
                                 SizedBox(
                                   width: 55,
                                   child: Text(
-                                    '${(item['amount'] ?? 0).toStringAsFixed(0)}',
+                                    Sales.amount?.toString() ?? '0',
+                                    
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),

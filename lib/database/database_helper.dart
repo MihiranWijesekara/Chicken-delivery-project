@@ -264,6 +264,107 @@ class DatabaseHelper {
     ''');
   }
 
+  //Today sales
+Future<List<Map<String, dynamic>>> getTodaySales() async {
+  final db = await database;
+  final today = DateTime.now();
+  // Change to DD/MM/YYYY format to match your database
+  final todayString = '${today.day}/${today.month}/${today.year}';
+  
+  print('🔍 Querying for date: $todayString'); // Debug
+  
+  final result = await db.rawQuery('''
+    SELECT Sales.*, items.name as item_name, shops.shop_name
+    FROM Sales
+    LEFT JOIN items ON Sales.item_id = items.id
+    LEFT JOIN shops ON Sales.shop_id = shops.id
+    WHERE Sales.added_date = ?
+    ORDER BY Sales.id DESC
+  ''', [todayString]);
+  
+  print('✅ Found ${result.length} records'); // Debug
+  return result;
+}
+
+  //Weekly sales
+Future<List<Map<String, dynamic>>> getWeeklySales() async {
+  final db = await database;
+  final now = DateTime.now();
+  
+  // Get the start of the week (Monday)
+  final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+  
+  // Get the end of the week (Sunday)
+  final endOfWeek = startOfWeek.add(Duration(days: 6));
+  
+  // Generate all dates in the current week
+  List<String> weekDates = [];
+  for (int i = 0; i < 7; i++) {
+    final date = startOfWeek.add(Duration(days: i));
+    // Pad day and month with leading zeros for consistent format
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    weekDates.add('$day/$month/${date.year}');
+  }
+  
+  print('🗓️ Week dates: $weekDates'); // Debug
+  
+  // Create placeholders for the IN clause
+  final placeholders = List.filled(weekDates.length, '?').join(',');
+  
+  final result = await db.rawQuery('''
+    SELECT Sales.*, items.name as item_name, shops.shop_name
+    FROM Sales
+    LEFT JOIN items ON Sales.item_id = items.id
+    LEFT JOIN shops ON Sales.shop_id = shops.id
+    WHERE Sales.added_date IN ($placeholders)
+    ORDER BY Sales.id DESC
+  ''', weekDates);
+  
+  print('✅ Found ${result.length} weekly records'); // Debug
+  return result;
+}
+
+//Monthly sales
+Future<List<Map<String, dynamic>>> getMonthlySales() async {
+  final db = await database;
+  final now = DateTime.now();
+  
+  // Get the first day of the current month
+  final firstDayOfMonth = DateTime(now.year, now.month, 1);
+  
+  // Get the last day of the current month
+  final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
+  
+  // Generate all dates in the current month
+  List<String> monthDates = [];
+  for (int i = 0; i < lastDayOfMonth.day; i++) {
+    final date = firstDayOfMonth.add(Duration(days: i));
+    // Pad day and month with leading zeros for consistent format
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    monthDates.add('$day/$month/${date.year}');
+  }
+  
+  print('📆 Month dates: ${monthDates.length} dates generated'); // Debug
+  
+  // Create placeholders for the IN clause
+  final placeholders = List.filled(monthDates.length, '?').join(',');
+  
+  final result = await db.rawQuery('''
+    SELECT Sales.*, items.name as item_name, shops.shop_name
+    FROM Sales
+    LEFT JOIN items ON Sales.item_id = items.id
+    LEFT JOIN shops ON Sales.shop_id = shops.id
+    WHERE Sales.added_date IN ($placeholders)
+    ORDER BY Sales.id DESC
+  ''', monthDates);
+  
+  print('✅ Found ${result.length} monthly records'); // Debug
+  return result;
+}
+
+
   // Update item
   Future<int> updateItem(ItemModel item) async {
     final db = await database;
