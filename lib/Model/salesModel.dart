@@ -35,7 +35,6 @@ class Salesmodel {
       'amount': amount,
       'Vat_Number': vatNumber,
       'added_date': addedDate,
-      'shop_name': shopName,
     };
   }
 

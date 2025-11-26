@@ -13,18 +13,40 @@ class Todaysales extends StatefulWidget {
 class _TodaysalesState extends State<Todaysales> {
    List<Salesmodel> sales = [];
    bool isLoading = false;
+   List<Map<String, dynamic>> _items = []; // Add this for item dropdown
 
     @override
   void initState() {
     super.initState();
+    _loadItems();
     _loadStocks();
+  }
+
+  Future<void> _loadItems() async {
+    final items = await DatabaseHelper.instance.getAllItems();
+    setState(() {
+      _items = items.map((item) => {
+        'id': item.id,
+        'name': item.name,
+      }).toList();
+    });
+  }
+
+  String _formatDateYear(String date) {
+    if (date.isEmpty || date.length < 10) return '';
+    return date.substring(0, 4); // Returns year (YYYY)
+  }
+
+  String _formatDateDayMonth(String date) {
+    if (date.isEmpty || date.length < 10) return '';
+    return date.substring(5, 10).replaceAll('-', '/'); // Returns MM/DD
   }
 
   
   Future<void> _loadStocks() async {
     setState(() => isLoading = true);
     try {
-      final data = await DatabaseHelper.instance.getTodaySales(); // NEW method
+      final data = await DatabaseHelper.instance.getTodaySales();
       print('Loaded sales data: $data');
       setState(() {
         sales = data.map((map) => Salesmodel.fromMap(map)).toList();
@@ -41,54 +63,191 @@ class _TodaysalesState extends State<Todaysales> {
     }
   }
 
-  void _editItem(int index) {
-    final sales = this.sales[index];
-    // Edit item logic
+  void _editItem(int index) async {
+    final sale = sales[index];
+
+    int? selectedItemId = sale.itemId;
+    final shopController = TextEditingController(text: sale.shopName ?? '');
+    final billController = TextEditingController(text: sale.billNo?.toString() ?? '');
+    final quantityController = TextEditingController(text: sale.quantityKg?.toString() ?? '');
+    final rateController = TextEditingController(text: sale.sellingPrice.toString());
+    final amountController = TextEditingController(
+        text: (sale.amount ?? (sale.sellingPrice * (sale.quantityKg ?? 0))).toString());
+    final dateController = TextEditingController(text: sale.addedDate ?? '');
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Item'),
-        content: Text('Edit ${sales.shopName ?? 'Null'} details here.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Sale'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: billController,
+                  decoration: const InputDecoration(
+                    labelText: 'Bill No',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: shopController,
+                  decoration: const InputDecoration(
+                    labelText: 'Shop Name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  value: selectedItemId,
+                  decoration: const InputDecoration(
+                    labelText: 'Item',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _items.map((item) {
+                    return DropdownMenuItem<int>(
+                      value: item['id'],
+                      child: Text(item['name']),
+                    );
+                  }).toList(),
+                  onChanged: (v) => setDialogState(() => selectedItemId = v),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: quantityController,
+                  decoration: const InputDecoration(
+                    labelText: 'Quantity (Kg)',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setDialogState(() {
+                    final qty = double.tryParse(quantityController.text) ?? 0;
+                    final rate = double.tryParse(rateController.text) ?? 0;
+                    amountController.text = (qty * rate).toStringAsFixed(2);
+                  }),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: rateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Selling Price',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setDialogState(() {
+                    final qty = double.tryParse(quantityController.text) ?? 0;
+                    final rate = double.tryParse(rateController.text) ?? 0;
+                    amountController.text = (qty * rate).toStringAsFixed(2);
+                  }),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: amountController,
+                  decoration: const InputDecoration(
+                    labelText: 'Amount',
+                    border: OutlineInputBorder(),
+                  ),
+                  readOnly: true,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: dateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Date',
+                    border: OutlineInputBorder(),
+                  ),
+                  readOnly: true,
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2101),
+                    );
+                    if (picked != null) {
+                      setDialogState(() {
+                        dateController.text = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              // Save changes
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (selectedItemId == null) return;
+    
+                // Create map without shop_name
+                final updateData = {
+                  'id': sale.id,
+                  'bill_no': billController.text.trim(),
+                  'shop_id': sale.shopId, // Keep original shop_id
+                  'item_id': selectedItemId!,
+                  'selling_price': int.tryParse(rateController.text) ?? 0,
+                  'quantity_kg': int.tryParse(quantityController.text),
+                  'amount': double.tryParse(amountController.text),
+                  'Vat_Number': sale.vatNumber,
+                  'added_date': dateController.text,
+                };
+    
+                await DatabaseHelper.instance.updateSale(sale.id!, updateData);
+                Navigator.pop(context);
+                await _loadStocks();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Sale updated'), backgroundColor: Colors.green),
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _deleteItem(int index) {
+    final sale = sales[index];
+    final id = sale.id;
+    if (id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot delete: missing id'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Item'),
-        content: Text('Are you sure you want to delete ${sales[index].shopName ?? ''}?'),
+        title: const Text('Delete Sale'),
+        content: Text('Delete sale for ${sale.shopName ?? 'shop'}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                sales.removeAt(index);
-              });
+            onPressed: () async {
+              final rows = await DatabaseHelper.instance.deleteSale(id);
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Item deleted successfully'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              if (rows > 0) {
+                await _loadStocks();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Sale deleted'), backgroundColor: Colors.red),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Delete failed'), backgroundColor: Colors.orange),
+                );
+              }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
@@ -231,7 +390,7 @@ class _TodaysalesState extends State<Todaysales> {
                 child: Row(
                   children: [
                     SizedBox(
-                      width: 28,
+                      width: 37,
                       child: Text(
                         'Bill',
                         style: TextStyle(
@@ -250,10 +409,11 @@ class _TodaysalesState extends State<Todaysales> {
                           fontSize: 11,
                           color: Colors.grey[800],
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                     Expanded(
-                      flex: 2,
+                      flex: 1,
                       child: Text(
                         'Shop Name',
                         style: TextStyle(
@@ -272,6 +432,7 @@ class _TodaysalesState extends State<Todaysales> {
                           fontSize: 11,
                           color: Colors.grey[800],
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                     SizedBox(
@@ -388,7 +549,7 @@ class _TodaysalesState extends State<Todaysales> {
                             child: Row(
                               children: [
                                 SizedBox(
-                                  width: 28,
+                                  width: 37,
                                   child: Text(
                                     Sales.billNo?.toString() ?? 'N/A',
                                     style: TextStyle(
@@ -400,17 +561,33 @@ class _TodaysalesState extends State<Todaysales> {
                                 ),
                                 SizedBox(
                                   width: 42,
-                                  child: Text(
-                                    formattedDate,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: const Color.fromARGB(255, 0, 0, 0),
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                  child: Column(
+                                    // crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        _formatDateYear(Sales.addedDate ?? ''),
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color.fromARGB(255, 0, 0, 0),
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      Text(
+                                        _formatDateDayMonth(Sales.addedDate ?? ''),
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color.fromARGB(255, 0, 0, 0),
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 Expanded(
-                                  flex: 2,
+                                  flex: 1,
                                   child: Text(
                                     Sales.shopName ?? '',
                                     style: TextStyle(
