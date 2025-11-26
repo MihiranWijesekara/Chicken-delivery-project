@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5, // bump version for amount column
+      version: 6, // bump version for Sales table and consistency
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onDowngrade: onDatabaseDowngradeDelete,
@@ -66,6 +66,22 @@ class DatabaseHelper {
         QTY REAL,
         added_date TEXT,
         FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE SET NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE Sales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bill_no TEXT NOT NULL,
+        shop_id INTEGER,
+        item_id INTEGER NOT NULL,
+        selling_price INTEGER NOT NULL,
+        quantity_kg INTEGER,
+        amount REAL DEFAULT 0,            -- NEW COLUMN
+        Vat_Number TEXT,
+        added_date TEXT,
+        FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE SET NULL,
+        FOREIGN KEY (shop_id) REFERENCES shops (id) ON DELETE SET NULL
       )
     ''');
   }
@@ -115,6 +131,25 @@ class DatabaseHelper {
         await db.execute('ALTER TABLE Stock ADD COLUMN amount REAL DEFAULT 0');
       }
     }
+
+    // Add Sales table for existing users
+    if (oldVersion < 6) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS Sales (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          bill_no TEXT NOT NULL,
+          shop_id INTEGER,
+          item_id INTEGER NOT NULL,
+          selling_price INTEGER NOT NULL,
+          quantity_kg INTEGER,
+          amount REAL DEFAULT 0,
+          Vat_Number TEXT,
+          added_date TEXT,
+          FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE SET NULL,
+          FOREIGN KEY (shop_id) REFERENCES shops (id) ON DELETE SET NULL
+        )
+      ''');
+    }
   }
 
   // Debug method to check if table exists
@@ -158,6 +193,12 @@ class DatabaseHelper {
   Future<int> insertStock(StockModel stock) async {
     final db = await database;
     return await db.insert('Stock', stock.toMap());
+  }
+
+  // Insert sale
+  Future<int> insertSale(Map<String, dynamic> sale) async {
+    final db = await database;
+    return await db.insert('Sales', sale);
   }
 
   // Get all items
@@ -211,6 +252,17 @@ class DatabaseHelper {
     return result.map((m) => StockModel.fromMap(m)).toList();
   }
 
+  // Get all sales
+  Future<List<Map<String, dynamic>>> getAllSales() async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT Sales.*, items.name as item_name, shops.shop_name
+      FROM Sales
+      LEFT JOIN items ON Sales.item_id = items.id
+      LEFT JOIN shops ON Sales.shop_id = shops.id
+      ORDER BY Sales.id DESC
+    ''');
+  }
 
   // Update item
   Future<int> updateItem(ItemModel item) async {
@@ -256,6 +308,17 @@ class DatabaseHelper {
     );
   }
 
+  // Update sale
+  Future<int> updateSale(int id, Map<String, dynamic> sale) async {
+    final db = await database;
+    return await db.update(
+      'Sales',
+      sale,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   // Delete item
   Future<int> deleteItem(int id) async {
     final db = await database;
@@ -294,6 +357,32 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  // Delete sale
+  Future<int> deleteSale(int id) async {
+    final db = await database;
+    return await db.delete(
+      'Sales',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Get next bill number
+  Future<String> getNextBillNumber() async {
+    final db = await database;
+    final result = await db.rawQuery(
+      'SELECT bill_no FROM Sales ORDER BY CAST(bill_no AS INTEGER) DESC LIMIT 1'
+    );
+    
+    if (result.isEmpty) {
+      return '000001';
+    }
+    
+    final lastBillNo = result.first['bill_no'] as String;
+    final nextNumber = (int.parse(lastBillNo) + 1).toString().padLeft(6, '0');
+    return nextNumber;
   }
 
   // Close database

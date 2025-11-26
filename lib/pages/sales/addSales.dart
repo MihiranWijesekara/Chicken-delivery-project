@@ -1,6 +1,7 @@
 import 'package:chicken_dilivery/Model/ItemModel.dart';
 import 'package:chicken_dilivery/Model/RootModel.dart';
 import 'package:chicken_dilivery/Model/ShopModel.dart';
+import 'package:chicken_dilivery/Model/salesModel.dart';
 import 'package:chicken_dilivery/database/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,12 +40,15 @@ class _AddsalesState extends State<Addsales> {
   bool _isLoadingRoots = true;
   bool _isLoadingShops = true;
 
+  bool _isGeneratingBillNumber = true; // Add this
+
   @override
   void initState() {
     super.initState();
     _loadItems();
     _loadRoots();
     _loadShops();
+    _generateBillNumber(); // Add this
     _selectedDate = DateTime.now();
     _dateController.text =
         '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}';
@@ -139,25 +143,52 @@ class _AddsalesState extends State<Addsales> {
       _sellingRateController.text = selectedItem.price.toStringAsFixed(2);
     });
   }
-
-  void _saveItem() {
-    if (_formKey.currentState!.validate()) {
-      final itemName = _itemNameController.text;
-      final sellingRate = double.parse(_sellingRateController.text);
-
-      Navigator.pop(context, {
-        'name': itemName,
-        'price': sellingRate,
-        'selectedItem': _selectedItemId,
-        'rootId': _selectedRootId,
-        'shopId': _selectedShop?.id,
-        'shopName': _selectedShop?.Shopname,
-        'vatNumber': _vatController.text,
+  
+  Future<void> _generateBillNumber() async {
+    try {
+      final billNo = await DatabaseHelper.instance.getNextBillNumber();
+      setState(() {
+        _billNumberController.text = billNo;
+        _isGeneratingBillNumber = false;
       });
+    } catch (e) {
+      setState(() => _isGeneratingBillNumber = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error generating bill number: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _saveItem() async {
+    if (_formKey.currentState!.validate()) {
+      final billNumber = _billNumberController.text;
+      final itemId = _selectedItemId;
+      final sellingRate = double.parse(_sellingRateController.text);
+      final weight = double.parse(_weightController.text);
+      final amount = double.parse(_amountController.text);
+      final date = _dateController.text;
+      final Vat_Number = _vatController.text; // NEW
+
+
+
+      final newSales = Salesmodel(
+        billNo: billNumber,
+        shopId: _selectedShop?.id,
+        itemId: itemId!,
+        sellingPrice: sellingRate.toInt(),
+        quantityKg: weight.toInt(),
+        amount: amount,
+        vatNumber: Vat_Number,
+        addedDate: date,
+      );
+      await DatabaseHelper.instance.insertSale(newSales.toMap());
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Item added successfully'),
+          content: Text('Sales added successfully'),
           backgroundColor: Colors.green,
         ),
       );
@@ -249,52 +280,62 @@ class _AddsalesState extends State<Addsales> {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        TextFormField(
-                          controller: _billNumberController,
-                          keyboardType: TextInputType.number,
-                          style: TextStyle(fontSize: 14),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          decoration: InputDecoration(
-                            hintText: 'Enter bill number',
-                            hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-                            filled: true,
-                            fillColor: const Color(0xFFF5F7FA),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                              borderSide: BorderSide(
-                                color: Colors.black,
-                                width: 1,
+                        _isGeneratingBillNumber
+                            ? const Center(
+                                child: SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              )
+                            : TextFormField(
+                                controller: _billNumberController,
+                                readOnly: true, // Changed to read-only
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[700],
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Auto-generated',
+                                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                                  filled: true,
+                                  fillColor: Colors.grey[100], // Different background for read-only
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey[300]!,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey[300]!,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey[400]!,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  isDense: true,
+                                  prefixIcon: Icon(Icons.tag, size: 18, color: Colors.grey[600]),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Bill number not generated';
+                                  }
+                                  return null;
+                                },
                               ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                              borderSide: BorderSide(
-                                color: Colors.black,
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
-                              borderSide: BorderSide(
-                                color: Colors.black,
-                                width: 1.5,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            isDense: true,
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter bill number';
-                            }
-                            return null;
-                          },
-                        ),
                       ],
                     ),
                   ),
