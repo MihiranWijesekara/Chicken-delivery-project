@@ -1,3 +1,5 @@
+import 'package:chicken_dilivery/Model/salesModel.dart';
+import 'package:chicken_dilivery/database/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,62 +11,245 @@ class Weeklysales extends StatefulWidget {
 }
 
 class _WeeklysalesState extends State<Weeklysales> {
-  // Sample data - replace with your actual data source
-  final List<Map<String, dynamic>> items = [
-    {'billNumber': 29, 'date': '2024-11-01', 'shopName': 'Thilina Store','Item': '1' ,'kg': 12.380, 'rate': 925.00, 'amount': 125000.00},
-    {'billNumber': 2, 'date': '2024-11-02', 'shopName': 'Super Market B','Item': '1' , 'kg': 8.5, 'rate': 180.00, 'amount': 1530.00},
-    {'billNumber': 3, 'date': '2024-11-03', 'shopName': 'Shop C', 'Item': '1' , 'kg': 120.0, 'rate': 220.00, 'amount': 2640.00},
-    {'billNumber': 4, 'date': '2024-11-04', 'shopName': 'Shop D', 'Item': '1' , 'kg': 15.5, 'rate': 450.00, 'amount': 6975.00},
-    {'billNumber': 5, 'date': '2024-11-05', 'shopName': 'Shop E', 'Item': '1' , 'kg': 5.0, 'rate': 120.00, 'amount': 600.00},
-  ];
 
-  void _editItem(int index) {
-    // Edit item logic
+  List<Salesmodel> sales = [];
+   bool isLoading = false;
+   List<Map<String, dynamic>> _items = [];
+
+
+    @override
+  void initState() {
+    super.initState();
+    _loadItems();
+    _loadStocks();
+  }
+
+   Future<void> _loadItems() async {
+    final items = await DatabaseHelper.instance.getAllItems();
+    setState(() {
+      _items = items.map((item) => {
+        'id': item.id,
+        'name': item.name,
+      }).toList();
+    });
+  }
+
+  String _formatDateYear(String date) {
+    if (date.isEmpty || date.length < 10) return '';
+    return date.substring(0, 4); // Returns year (YYYY)
+  }
+
+  String _formatDateDayMonth(String date) {
+    if (date.isEmpty || date.length < 10) return '';
+    return date.substring(5, 10).replaceAll('-', '/'); // Returns MM/DD
+  }
+
+  
+  Future<void> _loadStocks() async {
+    setState(() => isLoading = true);
+    try {
+      final data = await DatabaseHelper.instance.getWeeklySales();
+      print('Loaded sales data: $data');
+      setState(() {
+        sales = data.map((map) => Salesmodel.fromMap(map)).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading sales: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _editItem(int index) async {
+    final sale = sales[index];
+
+    int? selectedItemId = sale.itemId;
+    final shopController = TextEditingController(text: sale.shopName ?? '');
+    final billController = TextEditingController(text: sale.billNo?.toString() ?? '');
+    final quantityController = TextEditingController(text: sale.quantityKg?.toString() ?? '');
+    final rateController = TextEditingController(text: sale.sellingPrice.toString());
+    final amountController = TextEditingController(
+        text: (sale.amount ?? (sale.sellingPrice * (sale.quantityKg ?? 0))).toString());
+    final dateController = TextEditingController(text: sale.addedDate ?? '');
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Item'),
-        content: Text('Edit ${items[index]['shopName']}'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Sale'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: billController,
+                  decoration: const InputDecoration(
+                    labelText: 'Bill No',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: shopController,
+                  decoration: const InputDecoration(
+                    labelText: 'Shop Name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  value: selectedItemId,
+                  decoration: const InputDecoration(
+                    labelText: 'Item',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _items.map((item) {
+                    return DropdownMenuItem<int>(
+                      value: item['id'],
+                      child: Text(item['name']),
+                    );
+                  }).toList(),
+                  onChanged: (v) => setDialogState(() => selectedItemId = v),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: quantityController,
+                  decoration: const InputDecoration(
+                    labelText: 'Quantity (Kg)',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setDialogState(() {
+                    final qty = double.tryParse(quantityController.text) ?? 0;
+                    final rate = double.tryParse(rateController.text) ?? 0;
+                    amountController.text = (qty * rate).toStringAsFixed(2);
+                  }),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: rateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Selling Price',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setDialogState(() {
+                    final qty = double.tryParse(quantityController.text) ?? 0;
+                    final rate = double.tryParse(rateController.text) ?? 0;
+                    amountController.text = (qty * rate).toStringAsFixed(2);
+                  }),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: amountController,
+                  decoration: const InputDecoration(
+                    labelText: 'Amount',
+                    border: OutlineInputBorder(),
+                  ),
+                  readOnly: true,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: dateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Date',
+                    border: OutlineInputBorder(),
+                  ),
+                  readOnly: true,
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2101),
+                    );
+                    if (picked != null) {
+                      setDialogState(() {
+                        dateController.text = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              // Save changes
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (selectedItemId == null) return;
+    
+                // Create map without shop_name
+                final updateData = {
+                  'id': sale.id,
+                  'bill_no': billController.text.trim(),
+                  'shop_id': sale.shopId, // Keep original shop_id
+                  'item_id': selectedItemId!,
+                  'selling_price': int.tryParse(rateController.text) ?? 0,
+                  'quantity_kg': int.tryParse(quantityController.text),
+                  'amount': double.tryParse(amountController.text),
+                  'Vat_Number': sale.vatNumber,
+                  'added_date': dateController.text,
+                };
+    
+                await DatabaseHelper.instance.updateSale(sale.id!, updateData);
+                Navigator.pop(context);
+                await _loadStocks();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Sale updated'), backgroundColor: Colors.green),
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  void _deleteItem(int index) {
+   void _deleteItem(int index) {
+    final sale = sales[index];
+    final id = sale.id;
+    if (id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot delete: missing id'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Item'),
-        content: Text('Are you sure you want to delete ${items[index]['shopName']}?'),
+        title: const Text('Delete Sale'),
+        content: Text('Delete sale for ${sale.shopName ?? 'shop'}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                items.removeAt(index);
-              });
+            onPressed: () async {
+              final rows = await DatabaseHelper.instance.deleteSale(id);
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Item deleted successfully'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              if (rows > 0) {
+                await _loadStocks();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Sale deleted'), backgroundColor: Colors.red),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Delete failed'), backgroundColor: Colors.orange),
+                );
+              }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
@@ -320,7 +505,7 @@ class _WeeklysalesState extends State<Weeklysales> {
                     ),
                   ],
                 ),
-                child: items.isEmpty
+                child: sales.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -342,16 +527,16 @@ class _WeeklysalesState extends State<Weeklysales> {
                         ),
                       )
                     : ListView.separated(
-                        itemCount: items.length,
+                        itemCount: sales.length,
                         separatorBuilder: (context, index) => Divider(
                           height: 1,
                           color: Colors.grey[200],
                         ),
                         itemBuilder: (context, index) {
-                          final item = items[index];
+                          final saless = sales[index];
                           String formattedDate = '';
-                          if (item['date'] != null && item['date'].toString().length >= 10) {
-                            formattedDate = item['date'].toString().substring(5, 10).replaceAll('-', '/');
+                          if (saless.addedDate != null && saless.addedDate!.toString().length >= 10) {
+                            formattedDate = saless.addedDate!.toString().substring(5, 10).replaceAll('-', '/');
                           } else {
                             formattedDate = 'N/A';
                           }
@@ -366,7 +551,7 @@ class _WeeklysalesState extends State<Weeklysales> {
                                 SizedBox(
                                   width: 28,
                                   child: Text(
-                                    '${item['billNumber'] ?? ''}',
+                                     saless.billNo?.toString() ?? 'N/A',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -388,7 +573,7 @@ class _WeeklysalesState extends State<Weeklysales> {
                                 Expanded(
                                   flex: 2,
                                   child: Text(
-                                    item['shopName'] ?? '',
+                                     saless.shopName ?? '',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -400,7 +585,7 @@ class _WeeklysalesState extends State<Weeklysales> {
                                 SizedBox(
                                   width: 30,
                                   child: Text(
-                                    item['Item'] ?? '',
+                                    saless.itemId.toString(),
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -412,7 +597,7 @@ class _WeeklysalesState extends State<Weeklysales> {
                                 SizedBox(
                                   width: 40,
                                   child: Text(
-                                    '${item['kg'] ?? 0}',
+                                    saless.quantityKg?.toString() ?? '0',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -424,7 +609,7 @@ class _WeeklysalesState extends State<Weeklysales> {
                                 SizedBox(
                                   width: 42,
                                   child: Text(
-                                    '${(item['rate'] ?? 0).toStringAsFixed(0)}',
+                                    saless.sellingPrice.toString(),
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -436,7 +621,7 @@ class _WeeklysalesState extends State<Weeklysales> {
                                 SizedBox(
                                   width: 55,
                                   child: Text(
-                                    '${(item['amount'] ?? 0).toStringAsFixed(0)}',
+                                   saless.amount?.toString() ?? '0',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),

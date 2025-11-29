@@ -13,7 +13,7 @@ class Todaysales extends StatefulWidget {
 class _TodaysalesState extends State<Todaysales> {
    List<Salesmodel> sales = [];
    bool isLoading = false;
-   List<Map<String, dynamic>> _items = []; // Add this for item dropdown
+   List<Map<String, dynamic>> _items = [];
 
     @override
   void initState() {
