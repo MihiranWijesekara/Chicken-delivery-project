@@ -184,7 +184,7 @@ class _AddsalesState extends State<Addsales> {
         vatNumber: Vat_Number,
         addedDate: date,
       );
-      await DatabaseHelper.instance.insertSale(newSales.toMap());
+      await DatabaseHelper.instance.insertSaleFIFO(newSales.toMap());
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

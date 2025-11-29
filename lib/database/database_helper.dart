@@ -196,10 +196,66 @@ class DatabaseHelper {
   }
 
   // Insert sale
-  Future<int> insertSale(Map<String, dynamic> sale) async {
-    final db = await database;
-    return await db.insert('Sales', sale);
+  Future<int> insertSaleFIFO(Map<String, dynamic> sale) async {
+  final db = await database;
+  final itemId = sale['item_id'];
+  num qtyToSell = (sale['quantity_kg'] as num);
+
+  if (qtyToSell <= 0) {
+    throw Exception('Quantity must be greater than 0');
   }
+
+  // Use a transaction for atomic operation
+  return await db.transaction<int>((txn) async {
+    // Get available stock for the item, oldest first (FIFO)
+    final stockList = await txn.query(
+      'Stock',
+      where: 'item_id = ? AND COALESCE(remain_quantity, 0) > 0',
+      whereArgs: [itemId],
+      orderBy: 'added_date ASC, id ASC',
+    );
+
+    for (var stock in stockList) {
+      double remainQty = (stock['remain_quantity'] as num).toDouble();
+
+      if (remainQty >= qtyToSell) {
+        remainQty -= qtyToSell;
+
+        await txn.update(
+          'Stock',
+          {'remain_quantity': remainQty},
+          where: 'id = ?',
+          whereArgs: [stock['id']],
+        );
+
+        qtyToSell = 0;
+        break;
+      } else {
+        // Use up this stock and continue
+        qtyToSell -= remainQty;
+        await txn.update(
+          'Stock',
+          {'remain_quantity': 0},
+          where: 'id = ?',
+          whereArgs: [stock['id']],
+        );
+      }
+    }
+
+    if (qtyToSell > 0) {
+      throw Exception('Insufficient stock for item ID $itemId');
+    }
+
+    // Calculate amount for the sale
+    sale['amount'] = (sale['quantity_kg'] as int) * (sale['selling_price'] as int);
+
+    // Insert sale
+    final saleId = await txn.insert('Sales', sale);
+    return saleId;
+  });
+}
+
+
 
   // Get all items
   Future<List<ItemModel>> getAllItems() async {
