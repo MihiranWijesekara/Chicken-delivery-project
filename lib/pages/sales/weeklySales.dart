@@ -216,7 +216,7 @@ class _WeeklysalesState extends State<Weeklysales> {
     );
   }
 
-   void _deleteItem(int index) {
+  void _deleteItem(int index) {
     final sale = sales[index];
     final id = sale.id;
     if (id == null) {
