@@ -1,3 +1,4 @@
+import 'package:chicken_dilivery/database/database_helper.dart';
 import 'package:chicken_dilivery/pages/sales/addSales.dart';
 import 'package:chicken_dilivery/pages/sales/monthlySales.dart';
 import 'package:chicken_dilivery/pages/sales/todaySales.dart';
@@ -6,8 +7,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 
-class SalesDashboard extends StatelessWidget {
+class SalesDashboard extends StatefulWidget {
   const SalesDashboard({super.key});
+
+  @override
+  State<SalesDashboard> createState() => _SalesDashboardState();
+}
+
+class _SalesDashboardState extends State<SalesDashboard> {
+  double? todayTotal;
+  double? yesterdayTotal;
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTotals();
+  }
+
+  Future<void> _loadTotals() async {
+    try {
+      final db = DatabaseHelper.instance;
+      final t = await db.getTodaySalesTotalAmount();
+      final y = await db.getYesterdaySalesTotalAmount();
+      if (mounted) {
+        setState(() {
+          todayTotal = t;
+          yesterdayTotal = y;
+          loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          todayTotal = 0;
+          yesterdayTotal = 0;
+          loading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +164,9 @@ class SalesDashboard extends StatelessWidget {
                 Expanded(
                   child: _SummaryCard(
                     title: 'Today Sales',
-                    amount: 'RS 500000',
+                    amount: loading
+                        ? 'Loading...'
+                        : 'RS ${todayTotal!.toStringAsFixed(2)}',
                     icon: Icons.trending_up,
                     iconColor: const Color(0xFF4CAF50),
                   ),
@@ -134,7 +175,9 @@ class SalesDashboard extends StatelessWidget {
                 Expanded(
                   child: _SummaryCard(
                     title: 'Yesterday',
-                    amount: 'RS 480000',
+                    amount: loading
+                        ? 'Loading...'
+                        : 'RS ${yesterdayTotal!.toStringAsFixed(2)}',
                     icon: Icons.history,
                     iconColor: const Color(0xFF2196F3),
                   ),
@@ -168,7 +211,8 @@ class SalesDashboard extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (context) => const Addsales()),
           );
-          // handle result if needed
+          // reload totals after adding a sale
+          if (result != null) _loadTotals();
         },
         backgroundColor: const Color.fromARGB(255, 26, 11, 167),
         elevation: 4,

@@ -255,8 +255,6 @@ class DatabaseHelper {
   });
 }
 
-
-
   // Get all items
   Future<List<ItemModel>> getAllItems() async {
     final db = await database;
@@ -419,6 +417,32 @@ Future<List<Map<String, dynamic>>> getMonthlySales() async {
   print('✅ Found ${result.length} monthly records'); // Debug
   return result;
 }
+  //Today Sales Amount Total Price
+   Future<double> getTodaySalesTotalAmount() async {
+    final db = await database;
+    final now = DateTime.now();
+    final todayStr = '${now.day.toString().padLeft(2,'0')}/${now.month.toString().padLeft(2,'0')}/${now.year}';
+    final rows = await db.rawQuery('''
+      SELECT IFNULL(SUM(amount),0) AS total_amount
+      FROM Sales
+      WHERE added_date = ?
+    ''', [todayStr]);
+    return (rows.first['total_amount'] as num).toDouble();
+  }
+
+  //Yesterday Sales Amount Total Price
+   Future<double> getYesterdaySalesTotalAmount() async {
+    final db = await database;
+    final y = DateTime.now().subtract(const Duration(days: 1));
+    final yStr = '${y.day.toString().padLeft(2,'0')}/${y.month.toString().padLeft(2,'0')}/${y.year}';
+    final rows = await db.rawQuery('''
+      SELECT IFNULL(SUM(amount),0) AS total_amount
+      FROM Sales
+      WHERE added_date = ?
+    ''', [yStr]);
+    return (rows.first['total_amount'] as num).toDouble();
+  }
+
 
 
   // Update item
