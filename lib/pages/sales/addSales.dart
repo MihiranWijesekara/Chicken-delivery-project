@@ -3,6 +3,7 @@ import 'package:chicken_dilivery/Model/RootModel.dart';
 import 'package:chicken_dilivery/Model/ShopModel.dart';
 import 'package:chicken_dilivery/Model/salesModel.dart';
 import 'package:chicken_dilivery/database/database_helper.dart';
+import 'package:chicken_dilivery/pages/sales/PrintPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -162,38 +163,54 @@ class _AddsalesState extends State<Addsales> {
     }
   }
 
-  void _saveItem() async {
-    if (_formKey.currentState!.validate()) {
-      final billNumber = _billNumberController.text;
-      final itemId = _selectedItemId;
-      final sellingRate = double.parse(_sellingRateController.text);
-      final weight = double.parse(_weightController.text);
-      final amount = double.parse(_amountController.text);
-      final date = _dateController.text;
-      final Vat_Number = _vatController.text; // NEW
+ void _saveItem() async {
+  if (_formKey.currentState!.validate()) {
+    final billNumber = _billNumberController.text;
+    final itemId = _selectedItemId;
+    final sellingRate = double.parse(_sellingRateController.text);
+    final weight = double.parse(_weightController.text);
+    final amount = double.parse(_amountController.text);
+    final date = _dateController.text;
+    final Vat_Number = _vatController.text;
 
+    // Get selected item name
+    final selectedItem = _items.firstWhere((item) => item.id == itemId);
+    final itemName = selectedItem.name;
 
+    final newSales = Salesmodel(
+      billNo: billNumber,
+      shopId: _selectedShop?.id,
+      itemId: itemId!,
+      sellingPrice: sellingRate.toInt(),
+      quantityKg: weight.toInt(),
+      amount: amount,
+      vatNumber: Vat_Number,
+      addedDate: date,
+    );
+    
+    await DatabaseHelper.instance.insertSaleFIFO(newSales.toMap());
 
-      final newSales = Salesmodel(
-        billNo: billNumber,
-        shopId: _selectedShop?.id,
-        itemId: itemId!,
-        sellingPrice: sellingRate.toInt(),
-        quantityKg: weight.toInt(),
-        amount: amount,
-        vatNumber: Vat_Number,
-        addedDate: date,
-      );
-      await DatabaseHelper.instance.insertSaleFIFO(newSales.toMap());
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sales added successfully'),
-          backgroundColor: Colors.green,
+    // Navigate to ReceiptPage with sales data
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReceiptPage(
+          salesData: newSales,
+          itemName: itemName,
+          shopName: _selectedShop?.Shopname ?? 'N/A',
+          rootName: _roots.firstWhere((r) => r.id == _selectedRootId, orElse: () => RootModel(id: 0, name: 'N/A')).name,
         ),
-      );
-    }
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sales added successfully'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
