@@ -562,7 +562,17 @@ class _MonthlysalesState extends State<Monthlysales> {
                                 SizedBox(
                                   width: 42,
                                   child: Text(
-                                    formattedDate,
+                                                                 mSales.addedDate != null && mSales.addedDate!.isNotEmpty
+      ? (() {
+          final parts = mSales.addedDate!.split('/');
+          if (parts.length == 3) {
+            final day = parts[0].padLeft(2, '0');
+            final month = parts[1].padLeft(2, '0');
+            return '$day/$month';
+          }
+          return mSales.addedDate!;
+        })()
+      : 'N/A',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),

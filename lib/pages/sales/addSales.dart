@@ -191,17 +191,17 @@ class _AddsalesState extends State<Addsales> {
     await DatabaseHelper.instance.insertSaleFIFO(newSales.toMap());
 
     // Navigate to ReceiptPage with sales data
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ReceiptPage(
-          salesData: newSales,
-          itemName: itemName,
-          shopName: _selectedShop?.Shopname ?? 'N/A',
-          rootName: _roots.firstWhere((r) => r.id == _selectedRootId, orElse: () => RootModel(id: 0, name: 'N/A')).name,
-        ),
-      ),
-    );
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => ReceiptPage(
+    //       salesData: newSales,
+    //       itemName: itemName,
+    //       shopName: _selectedShop?.Shopname ?? 'N/A',
+    //       rootName: _roots.firstWhere((r) => r.id == _selectedRootId, orElse: () => RootModel(id: 0, name: 'N/A')).name,
+    //     ),
+    //   ),
+    // );
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

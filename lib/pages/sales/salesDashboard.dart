@@ -30,6 +30,7 @@ class _SalesDashboardState extends State<SalesDashboard> {
       final db = DatabaseHelper.instance;
       final t = await db.getTodaySalesTotalAmount();
       final y = await db.getYesterdaySalesTotalAmount();
+      print(    '[SalesDashboard] Today Total: $t, Yesterday Total: $y');
       if (mounted) {
         setState(() {
           todayTotal = t;

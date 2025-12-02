@@ -344,28 +344,22 @@ Future<List<Map<String, dynamic>>> getTodaySales() async {
 Future<List<Map<String, dynamic>>> getWeeklySales() async {
   final db = await database;
   final now = DateTime.now();
-  
+
   // Get the start of the week (Monday)
   final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-  
-  // Get the end of the week (Sunday)
-  final endOfWeek = startOfWeek.add(Duration(days: 6));
-  
-  // Generate all dates in the current week
+
+  // Generate all dates in the current week as D/M/YYYY (no leading zeros)
   List<String> weekDates = [];
   for (int i = 0; i < 7; i++) {
     final date = startOfWeek.add(Duration(days: i));
-    // Pad day and month with leading zeros for consistent format
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    weekDates.add('$day/$month/${date.year}');
+    weekDates.add('${date.day}/${date.month}/${date.year}');
   }
-  
+
   print('🗓️ Week dates: $weekDates'); // Debug
-  
+
   // Create placeholders for the IN clause
   final placeholders = List.filled(weekDates.length, '?').join(',');
-  
+
   final result = await db.rawQuery('''
     SELECT Sales.*, items.name as item_name, shops.shop_name
     FROM Sales
@@ -374,7 +368,7 @@ Future<List<Map<String, dynamic>>> getWeeklySales() async {
     WHERE Sales.added_date IN ($placeholders)
     ORDER BY Sales.id DESC
   ''', weekDates);
-  
+
   print('✅ Found ${result.length} weekly records'); // Debug
   return result;
 }
@@ -394,10 +388,7 @@ Future<List<Map<String, dynamic>>> getMonthlySales() async {
   List<String> monthDates = [];
   for (int i = 0; i < lastDayOfMonth.day; i++) {
     final date = firstDayOfMonth.add(Duration(days: i));
-    // Pad day and month with leading zeros for consistent format
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    monthDates.add('$day/$month/${date.year}');
+    monthDates.add('${date.day}/${date.month}/${date.year}');
   }
   
   print('📆 Month dates: ${monthDates.length} dates generated'); // Debug
@@ -419,29 +410,31 @@ Future<List<Map<String, dynamic>>> getMonthlySales() async {
 }
   //Today Sales Amount Total Price
    Future<double> getTodaySalesTotalAmount() async {
-    final db = await database;
-    final now = DateTime.now();
-    final todayStr = '${now.day.toString().padLeft(2,'0')}/${now.month.toString().padLeft(2,'0')}/${now.year}';
-    final rows = await db.rawQuery('''
-      SELECT IFNULL(SUM(amount),0) AS total_amount
-      FROM Sales
-      WHERE added_date = ?
-    ''', [todayStr]);
-    return (rows.first['total_amount'] as num).toDouble();
-  }
+  final db = await database;
+  final now = DateTime.now();
+  final padded = '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+  final unpadded = '${now.day}/${now.month}/${now.year}';
+  final rows = await db.rawQuery('''
+    SELECT IFNULL(SUM(amount),0) AS total_amount
+    FROM Sales
+    WHERE added_date = ? OR added_date = ?
+  ''', [padded, unpadded]);
+  return (rows.first['total_amount'] as num).toDouble();
+}
 
   //Yesterday Sales Amount Total Price
-   Future<double> getYesterdaySalesTotalAmount() async {
-    final db = await database;
-    final y = DateTime.now().subtract(const Duration(days: 1));
-    final yStr = '${y.day.toString().padLeft(2,'0')}/${y.month.toString().padLeft(2,'0')}/${y.year}';
-    final rows = await db.rawQuery('''
-      SELECT IFNULL(SUM(amount),0) AS total_amount
-      FROM Sales
-      WHERE added_date = ?
-    ''', [yStr]);
-    return (rows.first['total_amount'] as num).toDouble();
-  }
+  Future<double> getYesterdaySalesTotalAmount() async {
+  final db = await database;
+  final y = DateTime.now().subtract(const Duration(days: 1));
+  final padded = '${y.day.toString().padLeft(2, '0')}/${y.month.toString().padLeft(2, '0')}/${y.year}';
+  final unpadded = '${y.day}/${y.month}/${y.year}';
+  final rows = await db.rawQuery('''
+    SELECT IFNULL(SUM(amount),0) AS total_amount
+    FROM Sales
+    WHERE added_date = ? OR added_date = ?
+  ''', [padded, unpadded]);
+  return (rows.first['total_amount'] as num).toDouble();
+} 
 
 
 

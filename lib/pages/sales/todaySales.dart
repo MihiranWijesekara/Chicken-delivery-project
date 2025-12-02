@@ -33,13 +33,22 @@ class _TodaysalesState extends State<Todaysales> {
   }
 
   String _formatDateYear(String date) {
-    if (date.isEmpty || date.length < 10) return '';
-    return date.substring(0, 4); // Returns year (YYYY)
+    if (date.isEmpty) return '';
+    final parts = date.split('/');
+    if (parts.length == 3) return parts[2];
+    return '';
   }
 
   String _formatDateDayMonth(String date) {
-    if (date.isEmpty || date.length < 10) return '';
-    return date.substring(5, 10).replaceAll('-', '/'); // Returns MM/DD
+    if (date.isEmpty) return '';
+    final parts = date.split('/');
+    if (parts.length >= 2) {
+      // Pad day and month to 2 digits if needed
+      final day = parts[0].padLeft(2, '0');
+      final month = parts[1].padLeft(2, '0');
+      return '$day/$month';
+    }
+    return '';
   }
 
   
@@ -169,7 +178,8 @@ class _TodaysalesState extends State<Todaysales> {
                     );
                     if (picked != null) {
                       setDialogState(() {
-                        dateController.text = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                          // Save as D/M/YYYY (no leading zeros)
+                          dateController.text = '${picked.day}/${picked.month}/${picked.year}';
                       });
                     }
                   },
@@ -390,7 +400,7 @@ class _TodaysalesState extends State<Todaysales> {
                 child: Row(
                   children: [
                     SizedBox(
-                      width: 37,
+                      width: 60, // Increased width for Bill
                       child: Text(
                         'Bill',
                         style: TextStyle(
@@ -400,20 +410,9 @@ class _TodaysalesState extends State<Todaysales> {
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: 42,
-                      child: Text(
-                        'Date',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                          color: Colors.grey[800],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
+                    // Removed Date column here
                     Expanded(
-                      flex: 1,
+                      flex: 2, // Increased flex for Shop Name
                       child: Text(
                         'Shop Name',
                         style: TextStyle(
@@ -534,13 +533,6 @@ class _TodaysalesState extends State<Todaysales> {
                         ),
                         itemBuilder: (context, index) {
                           final Sales = sales[index];
-                          String formattedDate = '';
-                          if (Sales.addedDate != null && Sales.addedDate.toString().length >= 10) {
-                            formattedDate = Sales.addedDate.toString().substring(5, 10).replaceAll('-', '/');
-                          } else {
-                            formattedDate = 'N/A';
-                          }
-                          
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -549,7 +541,7 @@ class _TodaysalesState extends State<Todaysales> {
                             child: Row(
                               children: [
                                 SizedBox(
-                                  width: 37,
+                                  width: 60, // Match header width
                                   child: Text(
                                     Sales.billNo?.toString() ?? 'N/A',
                                     style: TextStyle(
@@ -559,35 +551,9 @@ class _TodaysalesState extends State<Todaysales> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(
-                                  width: 42,
-                                  child: Column(
-                                    // crossAxisAlignment: CrossAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        _formatDateYear(Sales.addedDate ?? ''),
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color.fromARGB(255, 0, 0, 0),
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      Text(
-                                        _formatDateDayMonth(Sales.addedDate ?? ''),
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color.fromARGB(255, 0, 0, 0),
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                // Removed Date cell here
                                 Expanded(
-                                  flex: 1,
+                                  flex: 2, // Match header flex
                                   child: Text(
                                     Sales.shopName ?? '',
                                     style: TextStyle(
@@ -602,7 +568,6 @@ class _TodaysalesState extends State<Todaysales> {
                                   width: 30,
                                   child: Text(
                                     Sales.itemId.toString(),
-                                    
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -615,7 +580,6 @@ class _TodaysalesState extends State<Todaysales> {
                                   width: 40,
                                   child: Text(
                                     Sales.quantityKg?.toString() ?? '0',
-                                    
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -628,7 +592,6 @@ class _TodaysalesState extends State<Todaysales> {
                                   width: 42,
                                   child: Text(
                                     Sales.sellingPrice.toString(),
-                                    
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -641,7 +604,6 @@ class _TodaysalesState extends State<Todaysales> {
                                   width: 55,
                                   child: Text(
                                     Sales.amount?.toString() ?? '0',
-                                    
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),

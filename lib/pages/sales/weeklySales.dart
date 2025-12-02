@@ -562,7 +562,17 @@ class _WeeklysalesState extends State<Weeklysales> {
                                 SizedBox(
                                   width: 42,
                                   child: Text(
-                                    formattedDate,
+                                    saless.addedDate != null && saless.addedDate!.isNotEmpty
+      ? (() {
+          final parts = saless.addedDate!.split('/');
+          if (parts.length == 3) {
+            final day = parts[0].padLeft(2, '0');
+            final month = parts[1].padLeft(2, '0');
+            return '$day/$month';
+          }
+          return saless.addedDate!;
+        })()
+      : 'N/A',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
