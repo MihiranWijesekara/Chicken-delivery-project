@@ -18,7 +18,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Items page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 1)),
           );
         },
       ),
@@ -32,7 +32,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Shop page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 2)),
           );
         },
       ),
@@ -46,7 +46,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Root page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 3)),
           );
         },
       ),
@@ -60,7 +60,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Root page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 4)),
           );
         },
       ),
@@ -74,7 +74,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Root page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 5)),
           );
         },
       ),
@@ -88,7 +88,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Root page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 6)),
           );
         },
       ),
@@ -102,7 +102,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Root page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 7)),
           );
         },
       ),
@@ -116,7 +116,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Root page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 8)),
           );
         },
       ),
@@ -130,7 +130,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Root page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 9)),
           );
         },
       ),
@@ -144,7 +144,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Root page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 10)),
           );
         },
       ),
@@ -158,7 +158,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Root page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 11)),
           );
         },
       ),
@@ -172,7 +172,7 @@ class Allstockdashboard extends StatelessWidget {
           // Navigate to Root page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstock()),
+            MaterialPageRoute(builder: (context) => const Allstock( month: 12)),
           );
         },
       ),

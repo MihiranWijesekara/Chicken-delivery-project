@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class Allstock extends StatefulWidget {
-  const Allstock({super.key});
+  final int month;
+  const Allstock({super.key, required this.month});
 
   @override
   State<Allstock> createState() => _AllstockState();
@@ -38,7 +39,7 @@ class _AllstockState extends State<Allstock> {
   Future<void> _loadStocks() async {
     setState(() => isLoading = true);
     try {
-      final data = await DatabaseHelper.instance.getAllStock(); // NEW method
+      final data = await DatabaseHelper.instance.getStockByMonth(widget.month);
       setState(() {
         stocks = data;
         _applyDateFilter();

@@ -283,14 +283,21 @@ class DatabaseHelper {
   }
 
   // Get all stock
-  Future<List<StockModel>> getAllStock() async {
+  Future<List<StockModel>> getStockByMonth(int month) async {
     final db = await database;
-    final result = await db.rawQuery('''
+    final paddedMonth = month.toString().padLeft(2, '0');
+
+    final result = await db.rawQuery(
+      '''
       SELECT Stock.*, items.name as item_name
       FROM Stock
       LEFT JOIN items ON Stock.item_id = items.id
-      ORDER BY Stock.id ASC
-    ''');
+     WHERE added_date LIKE ? OR added_date LIKE ?
+    ORDER BY Stock.id ASC
+  ''',
+      ['%/$paddedMonth/%', '%/$month/%'],
+    );
+
     return result.map((m) => StockModel.fromMap(m)).toList();
   }
 
@@ -308,16 +315,36 @@ class DatabaseHelper {
   }
 
   // Get all sales
-  Future<List<Map<String, dynamic>>> getAllSales() async {
+  Future<List<Map<String, dynamic>>> getSalesByMonths(int month) async {
     final db = await database;
+    final paddedMonth = month.toString().padLeft(2, '0');
     return await db.rawQuery('''
       SELECT Sales.*, items.name as item_name, shops.shop_name
       FROM Sales
       LEFT JOIN items ON Sales.item_id = items.id
       LEFT JOIN shops ON Sales.shop_id = shops.id
+      WHERE added_date LIKE ? OR added_date LIKE ?
       ORDER BY Sales.id DESC
-    ''');
+    ''', ['%/$paddedMonth/%', '%/$month/%']);
   }
+
+  // Future<List<StockModel>> getStockByMonth(int month) async {
+  //   final db = await database;
+  //   final paddedMonth = month.toString().padLeft(2, '0');
+
+  //   final result = await db.rawQuery(
+  //     '''
+  //     SELECT Stock.*, items.name as item_name
+  //     FROM Stock
+  //     LEFT JOIN items ON Stock.item_id = items.id
+  //    WHERE added_date LIKE ? OR added_date LIKE ?
+  //   ORDER BY Stock.id ASC
+  // ''',
+  //     ['%/$paddedMonth/%', '%/$month/%'],
+  //   );
+
+  //   return result.map((m) => StockModel.fromMap(m)).toList();
+  // }
 
   //Today sales
   Future<List<Map<String, dynamic>>> getTodaySales() async {

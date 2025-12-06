@@ -66,7 +66,7 @@ class DashboardPage extends StatelessWidget {
           // Navigate to Items page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstockdashboard()),
+            MaterialPageRoute(builder: (context) => const Allstockdashboard( )),
           );
         },
       ),
