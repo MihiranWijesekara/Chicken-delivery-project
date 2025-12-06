@@ -259,15 +259,24 @@ class _StockDisplayState extends State<StockDisplay> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final padding = screenWidth * 0.04;
+    final cardRadius = screenWidth * 0.03;
+    final iconSize = screenWidth * 0.07;
+    final fontSizeTitle = screenWidth * 0.045;
+    final fontSizeSubtitle = screenWidth * 0.035;
+    final fontSizeSmall = screenWidth * 0.03;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        toolbarHeight: 80,
+        toolbarHeight: screenHeight * 0.10,
         backgroundColor: Colors.transparent,
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white, size: iconSize),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -285,7 +294,7 @@ class _StockDisplayState extends State<StockDisplay> {
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: EdgeInsets.symmetric(horizontal: padding),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,7 +304,7 @@ class _StockDisplayState extends State<StockDisplay> {
                     children: [
                       Row(
                         children: [
-                          const SizedBox(width: 40),
+                          SizedBox(width: iconSize),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -303,7 +312,7 @@ class _StockDisplayState extends State<StockDisplay> {
                                 'Stock',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 20,
+                                  fontSize: fontSizeTitle,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.5,
                                 ),
@@ -320,54 +329,65 @@ class _StockDisplayState extends State<StockDisplay> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${stocks.length} RECORDS FOUND',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
-                letterSpacing: 0.5,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(padding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${stocks.length} RECORDS FOUND',
+                style: TextStyle(
+                  fontSize: fontSizeSmall,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : stocks.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.inventory_2_outlined,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No items available',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
+              SizedBox(height: padding),
+              Expanded(
+                child: isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : stocks.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: screenWidth * 0.18,
+                              color: Colors.grey[400],
                             ),
-                          ),
-                        ],
+                            SizedBox(height: padding),
+                            Text(
+                              'No items available',
+                              style: TextStyle(
+                                fontSize: fontSizeSubtitle,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: stocks.length,
+                        itemBuilder: (context, index) {
+                          final stock = stocks[index];
+                          return _buildStockCard(
+                            stock,
+                            index,
+                            cardRadius,
+                            iconSize,
+                            fontSizeTitle,
+                            fontSizeSubtitle,
+                            fontSizeSmall,
+                            padding,
+                          );
+                        },
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: stocks.length,
-                      itemBuilder: (context, index) {
-                        final stock = stocks[index];
-                        return _buildStockCard(stock, index);
-                      },
-                    ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -379,39 +399,52 @@ class _StockDisplayState extends State<StockDisplay> {
           if (result == true) _loadStocks();
         },
         backgroundColor: const Color.fromARGB(255, 224, 237, 51),
-        icon: const Icon(Icons.add),
-        label: const Text(
+        icon: Icon(Icons.add, size: iconSize),
+        label: Text(
           'Add Stock',
           style: TextStyle(
             color: Color.fromARGB(255, 18, 16, 16),
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
+            fontSize: fontSizeSubtitle,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStockCard(StockModel stock, int index) {
+  Widget _buildStockCard(
+    StockModel stock,
+    int index,
+    double cardRadius,
+    double iconSize,
+    double fontSizeTitle,
+    double fontSizeSubtitle,
+    double fontSizeSmall,
+    double padding,
+  ) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: padding * 0.75),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(cardRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          tilePadding: EdgeInsets.symmetric(
+            horizontal: padding,
+            vertical: padding * 0.5,
+          ),
+          childrenPadding: EdgeInsets.fromLTRB(padding, 0, padding, padding),
           title: Row(
             children: [
               Expanded(
@@ -421,18 +454,18 @@ class _StockDisplayState extends State<StockDisplay> {
                     Text(
                       stock.item_name ?? 'Unknown Item',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: fontSizeTitle,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey[900],
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: padding * 0.5),
                     Row(
                       children: [
                         Text(
                           'Weight: ',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: fontSizeSmall,
                             color: Colors.grey[600],
                             fontWeight: FontWeight.w500,
                           ),
@@ -440,16 +473,16 @@ class _StockDisplayState extends State<StockDisplay> {
                         Text(
                           '${stock.quantity_kg ?? 0} Kg',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: fontSizeSmall,
                             color: Colors.grey[900],
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        SizedBox(width: padding),
                         Text(
                           'Amount: ',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: fontSizeSmall,
                             color: Colors.grey[600],
                             fontWeight: FontWeight.w500,
                           ),
@@ -457,20 +490,20 @@ class _StockDisplayState extends State<StockDisplay> {
                         Text(
                           'Rs ${stock.amount?.toStringAsFixed(0) ?? '0'}',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: fontSizeSmall,
                             color: Colors.green[700],
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: padding * 0.3),
                     Row(
                       children: [
                         Text(
                           'Remaining Stock: ',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: fontSizeSmall,
                             color: Colors.grey[600],
                             fontWeight: FontWeight.w500,
                           ),
@@ -478,7 +511,7 @@ class _StockDisplayState extends State<StockDisplay> {
                         Text(
                           '${stock.remain_quantity?.toStringAsFixed(1) ?? '0'} Kg',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: fontSizeSmall,
                             color: Colors.orange[700],
                             fontWeight: FontWeight.w600,
                           ),
@@ -491,7 +524,7 @@ class _StockDisplayState extends State<StockDisplay> {
               Text(
                 stock.added_date ?? '',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: fontSizeSmall,
                   color: Colors.grey[500],
                   fontWeight: FontWeight.w500,
                 ),
@@ -500,7 +533,7 @@ class _StockDisplayState extends State<StockDisplay> {
           ),
           children: [
             Divider(height: 1, color: Colors.grey[200]),
-            const SizedBox(height: 12),
+            SizedBox(height: padding * 0.5),
             Row(
               children: [
                 Expanded(
@@ -508,6 +541,9 @@ class _StockDisplayState extends State<StockDisplay> {
                     'QTY',
                     stock.QTY?.toString() ?? '0',
                     Icons.format_list_numbered,
+                    iconSize,
+                    fontSizeSmall,
+                    fontSizeSubtitle,
                   ),
                 ),
                 Expanded(
@@ -515,11 +551,14 @@ class _StockDisplayState extends State<StockDisplay> {
                     'Weight',
                     '${stock.quantity_kg ?? 0} Kg',
                     Icons.scale,
+                    iconSize,
+                    fontSizeSmall,
+                    fontSizeSubtitle,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: padding * 0.4),
             Row(
               children: [
                 Expanded(
@@ -527,6 +566,9 @@ class _StockDisplayState extends State<StockDisplay> {
                     'Rate',
                     'Rs ${stock.stock_price ?? 0}',
                     Icons.attach_money,
+                    iconSize,
+                    fontSizeSmall,
+                    fontSizeSubtitle,
                   ),
                 ),
                 Expanded(
@@ -534,43 +576,55 @@ class _StockDisplayState extends State<StockDisplay> {
                     'Amount',
                     'Rs ${stock.amount?.toStringAsFixed(0) ?? '0'}',
                     Icons.attach_money,
+                    iconSize,
+                    fontSizeSmall,
+                    fontSizeSubtitle,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: padding * 0.4),
             _buildDetailItemWithoutIcon(
               'Remaining Stock',
               '${stock.remain_quantity?.toStringAsFixed(1) ?? '0'} Kg',
+              fontSizeSmall,
+              fontSizeSubtitle,
+              padding,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: padding),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 OutlinedButton.icon(
                   onPressed: () => _editStock(index),
-                  icon: Icon(Icons.edit, size: 16),
-                  label: Text('Edit'),
+                  icon: Icon(Icons.edit, size: iconSize * 0.7),
+                  label: Text(
+                    'Edit',
+                    style: TextStyle(fontSize: fontSizeSmall),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.blue,
                     side: BorderSide(color: Colors.blue),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: padding,
+                      vertical: padding * 0.5,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: padding * 0.5),
                 OutlinedButton.icon(
                   onPressed: () => _deleteItem(index),
-                  icon: Icon(Icons.delete, size: 16),
-                  label: Text('Delete'),
+                  icon: Icon(Icons.delete, size: iconSize * 0.7),
+                  label: Text(
+                    'Delete',
+                    style: TextStyle(fontSize: fontSizeSmall),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
                     side: BorderSide(color: Colors.red),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: padding,
+                      vertical: padding * 0.5,
                     ),
                   ),
                 ),
@@ -582,13 +636,20 @@ class _StockDisplayState extends State<StockDisplay> {
     );
   }
 
-  Widget _buildDetailItem(String label, String value, IconData icon) {
+  Widget _buildDetailItem(
+    String label,
+    String value,
+    IconData icon,
+    double iconSize,
+    double fontSizeSmall,
+    double fontSizeSubtitle,
+  ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: iconSize * 0.2),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 8),
+          Icon(icon, size: iconSize * 0.7, color: Colors.grey[600]),
+          SizedBox(width: iconSize * 0.3),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -596,16 +657,16 @@ class _StockDisplayState extends State<StockDisplay> {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: fontSizeSmall,
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: iconSize * 0.1),
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: fontSizeSubtitle,
                     color: Colors.grey[900],
                     fontWeight: FontWeight.w600,
                   ),
@@ -618,12 +679,18 @@ class _StockDisplayState extends State<StockDisplay> {
     );
   }
 
-  Widget _buildDetailItemWithoutIcon(String label, String value) {
+  Widget _buildDetailItemWithoutIcon(
+    String label,
+    String value,
+    double fontSizeSmall,
+    double fontSizeSubtitle,
+    double padding,
+  ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: padding * 0.2),
       child: Row(
         children: [
-          const SizedBox(width: 24),
+          SizedBox(width: padding * 1.5),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -631,16 +698,16 @@ class _StockDisplayState extends State<StockDisplay> {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: fontSizeSmall,
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: padding * 0.1),
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: fontSizeSubtitle,
                     color: Colors.grey[900],
                     fontWeight: FontWeight.w600,
                   ),
