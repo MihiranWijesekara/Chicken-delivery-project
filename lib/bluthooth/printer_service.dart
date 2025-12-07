@@ -17,22 +17,26 @@ class PrinterService {
     required List<CartItem> cartItems,
     required double totalAmount,
     required String rootName,
-
   }) async {
-    var isConnected = await bluetooth.isConnected ?? false;
-    if (!isConnected) {
-      await bluetooth.connect((await bluetooth.getBondedDevices())[0]);
+    try {
+      var isConnected = await bluetooth.isConnected ?? false;
+      if (!isConnected) {
+        final devices = await bluetooth.getBondedDevices();
+        if (devices.isEmpty) return; // No printer found, just return
+        await bluetooth.connect(devices[0]);
+      }
+      List<int> data = await ReceiptBuilder.buildReceipt(
+        shopName: shopName,
+        billNo: billNo,
+        date: date,
+        cartItems: cartItems,
+        totalAmount: totalAmount,
+        rootName: rootName,
+      );
+      bluetooth.writeBytes(Uint8List.fromList(data));
+    } catch (e) {
+      // Ignore errors, do not show error to user
     }
-
-    List<int> data = await ReceiptBuilder.buildReceipt(
-      shopName: shopName,
-      billNo: billNo,
-      date: date,
-      cartItems: cartItems,
-      totalAmount: totalAmount,
-      rootName: rootName,
-    );
-    bluetooth.writeBytes(Uint8List.fromList(data));
   }
 
   // -------------------- DESKTOP PRINTER --------------------
@@ -72,24 +76,28 @@ class PrinterService {
     required double totalAmount,
     required String rootName,
   }) async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      await printMobileBluetooth(
-        shopName: shopName,
-        billNo: billNo,
-        date: date,
-        cartItems: cartItems,
-        totalAmount: totalAmount,
-        rootName: rootName,
-      );
-    } else {
-      await printDesktop(
-        shopName: shopName,
-        billNo: billNo,
-        date: date,
-        cartItems: cartItems,
-        totalAmount: totalAmount,
-        rootName: rootName,
-      );
+    try {
+      if (Platform.isAndroid || Platform.isIOS) {
+        await printMobileBluetooth(
+          shopName: shopName,
+          billNo: billNo,
+          date: date,
+          cartItems: cartItems,
+          totalAmount: totalAmount,
+          rootName: rootName,
+        );
+      } else {
+        await printDesktop(
+          shopName: shopName,
+          billNo: billNo,
+          date: date,
+          cartItems: cartItems,
+          totalAmount: totalAmount,
+          rootName: rootName,
+        );
+      }
+    } catch (e) {
+      // Ignore errors, do not show error to user
     }
   }
 }

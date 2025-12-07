@@ -431,7 +431,7 @@ class _WeeklysalesState extends State<Weeklysales> {
                       ),
                     ),
                     SizedBox(
-                      width: 30,
+                      width: 30, // Make sure this is 30 for both header and row
                       child: Text(
                         'Item',
                         style: TextStyle(
@@ -445,6 +445,18 @@ class _WeeklysalesState extends State<Weeklysales> {
                       width: 40,
                       child: Text(
                         'KG',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          color: Colors.grey[800],
+                        ),
+                        textAlign: TextAlign.right,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 40,
+                      child: Text(
+                        'QTY',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
@@ -605,13 +617,15 @@ class _WeeklysalesState extends State<Weeklysales> {
                                       color: const Color.fromARGB(255, 0, 0, 0),
                                       fontWeight: FontWeight.w700,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2, // <-- Allow up to 2 lines
+                                    overflow: TextOverflow.visible, // <-- Show wrapped text
+                                    softWrap: true, // <-- Enable soft wrapping
                                   ),
                                 ),
                                 SizedBox(
                                   width: 30,
                                   child: Text(
-                                    saless.itemId.toString(),
+                                    saless.itemId.toString(), // <-- This displays the item ID
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),
@@ -624,6 +638,18 @@ class _WeeklysalesState extends State<Weeklysales> {
                                   width: 40,
                                   child: Text(
                                     saless.quantityKg?.toString() ?? '0',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: const Color.fromARGB(255, 0, 0, 0),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 40, // <-- Add this for QTY
+                                  child: Text(
+                                    saless.qty?.toString() ?? '0', // <-- Display QTY here
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),

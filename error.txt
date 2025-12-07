@@ -1,6 +1,3 @@
-* stock eka add karankota stock price eka auto set wenna hadanna mokada ethanata enne item eke thiyena gana 
-e wagema stock eka add karankota selling price eka set karanna
-
-* selling price eka set karanna sales add karankota 
-* All sales eka display eka hadanna
-* All satock eka display eka hadanna
+1 - Today sales , weekly sales , montly sales add pagination
+2- All sales add pagination
+3 - All stock add pagination

@@ -79,6 +79,7 @@ class DatabaseHelper {
         quantity_kg INTEGER,
         amount REAL DEFAULT 0,            -- NEW COLUMN
         Vat_Number TEXT,
+        QTY INTEGER,
         added_date TEXT,
         FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE SET NULL,
         FOREIGN KEY (shop_id) REFERENCES shops (id) ON DELETE SET NULL

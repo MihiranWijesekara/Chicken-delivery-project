@@ -455,6 +455,18 @@ class _TodaysalesState extends State<Todaysales> {
                       ),
                     ),
                     SizedBox(
+                      width: 40,
+                      child: Text(
+                        'QTY',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          color: Colors.grey[800],
+                        ),
+                        textAlign: TextAlign.right,
+                      ),
+                    ),
+                    SizedBox(
                       width: 42,
                       child: Text(
                         'Rate',
@@ -557,9 +569,8 @@ class _TodaysalesState extends State<Todaysales> {
                                     ),
                                   ),
                                 ),
-                                // Removed Date cell here
                                 Expanded(
-                                  flex: 2, // Match header flex
+                                  flex: 2,
                                   child: Text(
                                     Sales.shopName ?? '',
                                     style: TextStyle(
@@ -567,7 +578,10 @@ class _TodaysalesState extends State<Todaysales> {
                                       color: const Color.fromARGB(255, 0, 0, 0),
                                       fontWeight: FontWeight.w700,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2, // <-- Allow up to 2 lines
+                                    overflow: TextOverflow
+                                        .visible, // <-- Show wrapped text
+                                    softWrap: true, // <-- Enable soft wrapping
                                   ),
                                 ),
                                 SizedBox(
@@ -586,6 +600,19 @@ class _TodaysalesState extends State<Todaysales> {
                                   width: 40,
                                   child: Text(
                                     Sales.quantityKg?.toString() ?? '0',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: const Color.fromARGB(255, 0, 0, 0),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 40,
+                                  child: Text(
+                                    Sales.qty?.toString() ??
+                                        '0', // <-- Display QTY here
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),

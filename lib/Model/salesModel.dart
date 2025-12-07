@@ -9,6 +9,7 @@ class Salesmodel {
   final String? vatNumber;
   final String? addedDate;
   final String? shopName;
+  final int? qty; 
 
   Salesmodel({
     this.id,
@@ -21,6 +22,7 @@ class Salesmodel {
     this.vatNumber,
     this.addedDate,
     this.shopName,
+    this.qty,
   });
 
   // Convert to Map for database
@@ -35,6 +37,7 @@ class Salesmodel {
       'amount': amount,
       'Vat_Number': vatNumber,
       'added_date': addedDate,
+      'QTY': qty,
     };
   }
 
@@ -51,6 +54,7 @@ class Salesmodel {
       vatNumber: map['Vat_Number'],
       addedDate: map['added_date'],
       shopName: map['shop_name'],
+      qty: map['QTY'],
     );
   }
 }

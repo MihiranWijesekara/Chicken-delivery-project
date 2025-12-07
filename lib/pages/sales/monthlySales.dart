@@ -454,6 +454,18 @@ class _MonthlysalesState extends State<Monthlysales> {
                       ),
                     ),
                     SizedBox(
+                      width: 40,
+                      child: Text(
+                        'QTY',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          color: Colors.grey[800],
+                        ),
+                        textAlign: TextAlign.right,
+                      ),
+                    ),
+                    SizedBox(
                       width: 42,
                       child: Text(
                         'Rate',
@@ -604,7 +616,10 @@ class _MonthlysalesState extends State<Monthlysales> {
                                       color: const Color.fromARGB(255, 0, 0, 0),
                                       fontWeight: FontWeight.w700,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2, // <-- Allow up to 2 lines
+                                    overflow: TextOverflow
+                                        .visible, // <-- Show wrapped text
+                                    softWrap: true, // <-- Enable soft wrapping
                                   ),
                                 ),
                                 SizedBox(
@@ -623,6 +638,20 @@ class _MonthlysalesState extends State<Monthlysales> {
                                   width: 40,
                                   child: Text(
                                     mSales.quantityKg?.toString() ?? '0',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: const Color.fromARGB(255, 0, 0, 0),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width:
+                                      40, // <-- Add this for QTY, match header width
+                                  child: Text(
+                                    mSales.qty?.toString() ??
+                                        '0', // <-- Display QTY here
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: const Color.fromARGB(255, 0, 0, 0),

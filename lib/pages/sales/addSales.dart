@@ -22,6 +22,7 @@ class _AddsalesState extends State<Addsales> {
   final _billNumberController = TextEditingController();
   final _vatController = TextEditingController();
   final _dateController = TextEditingController();
+  final _qtyController = TextEditingController(); // <-- Add this line
 
   DateTime? _selectedDate;
   int? _selectedItemId;
@@ -171,8 +172,7 @@ class _AddsalesState extends State<Addsales> {
       return;
     }
 
-    if (_sellingRateController.text.isEmpty ||
-        _weightController.text.isEmpty) {
+    if (_sellingRateController.text.isEmpty || _weightController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter selling price and weight'),
@@ -182,19 +182,29 @@ class _AddsalesState extends State<Addsales> {
       return;
     }
 
-    final selectedItem = _items.firstWhere((item) => item.id == _selectedItemId);
+    final selectedItem = _items.firstWhere(
+      (item) => item.id == _selectedItemId,
+    );
+    final originalPrice = selectedItem.price;
     final sellingPrice = double.parse(_sellingRateController.text);
     final weight = double.parse(_weightController.text);
     final amount = sellingPrice * weight;
+    final discount = (originalPrice > sellingPrice)
+        ? (originalPrice - sellingPrice) * weight
+        : 0.0;
 
     setState(() {
-      _cartItems.add(CartItem(
-        itemId: _selectedItemId!,
-        itemName: selectedItem.name,
-        sellingPrice: sellingPrice,
-        weight: weight,
-        amount: amount,
-      ));
+      _cartItems.add(
+        CartItem(
+          itemId: _selectedItemId!,
+          itemName: selectedItem.name,
+          originalPrice: originalPrice,
+          sellingPrice: sellingPrice,
+          weight: weight,
+          amount: amount,
+          discount: discount,
+        ),
+      );
 
       // Clear fields
       _selectedItemId = null;
@@ -226,6 +236,10 @@ class _AddsalesState extends State<Addsales> {
 
   double get _totalAmount {
     return _cartItems.fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  double get _totalDiscount {
+    return _cartItems.fold(0.0, (sum, item) => sum + item.discount);
   }
 
   Future<void> _saveAllSales() async {
@@ -265,6 +279,7 @@ class _AddsalesState extends State<Addsales> {
           amount: cartItem.amount,
           vatNumber: vatNumber,
           addedDate: date,
+          qty: int.tryParse(_qtyController.text), // <-- Add this line
         );
 
         await DatabaseHelper.instance.insertSaleFIFO(newSales.toMap());
@@ -277,7 +292,9 @@ class _AddsalesState extends State<Addsales> {
         date: date,
         cartItems: _cartItems,
         totalAmount: _totalAmount,
-        rootName: _selectedRootId != null ? _roots.firstWhere((root) => root.id == _selectedRootId!).name : '',
+        rootName: _selectedRootId != null
+            ? _roots.firstWhere((root) => root.id == _selectedRootId!).name
+            : '',
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -362,7 +379,9 @@ class _AddsalesState extends State<Addsales> {
             _buildSellingPriceField(),
             const SizedBox(height: 10),
             _buildWeightField(),
-            const SizedBox(height: 15),
+            const SizedBox(height: 10),
+            _buildQTYField(),
+            const SizedBox(height: 1),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -370,10 +389,7 @@ class _AddsalesState extends State<Addsales> {
                 icon: const Icon(Icons.add_shopping_cart, size: 19),
                 label: const Text(
                   'Add to Cart',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 26, 11, 167),
@@ -394,11 +410,18 @@ class _AddsalesState extends State<Addsales> {
                 ? Center(
                     child: Column(
                       children: [
-                        Icon(Icons.shopping_cart_outlined, size: 60, color: Colors.grey[300]),
+                        Icon(
+                          Icons.shopping_cart_outlined,
+                          size: 60,
+                          color: Colors.grey[300],
+                        ),
                         const SizedBox(height: 10),
                         Text(
                           'Cart is empty',
-                          style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[500],
+                          ),
                         ),
                       ],
                     ),
@@ -449,6 +472,28 @@ class _AddsalesState extends State<Addsales> {
                     ],
                   ),
                   const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total Discount',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                      Text(
+                        'RS ${_totalDiscount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -464,7 +509,9 @@ class _AddsalesState extends State<Addsales> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 10), // reduced padding
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                        ), // reduced padding
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -513,10 +560,7 @@ class _AddsalesState extends State<Addsales> {
           children: [
             const Text(
               'Bill No.',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             _isGeneratingBillNumber
@@ -569,10 +613,7 @@ class _AddsalesState extends State<Addsales> {
           children: [
             const Text(
               'Date',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             TextFormField(
@@ -628,10 +669,10 @@ class _AddsalesState extends State<Addsales> {
             DropdownButtonFormField<int>(
               value: _selectedRootId,
               items: _roots
-                  .map((r) => DropdownMenuItem<int>(
-                        value: r.id,
-                        child: Text(r.name),
-                      ))
+                  .map(
+                    (r) =>
+                        DropdownMenuItem<int>(value: r.id, child: Text(r.name)),
+                  )
                   .toList(),
               decoration: InputDecoration(
                 hintText: 'Select root',
@@ -687,12 +728,14 @@ class _AddsalesState extends State<Addsales> {
             Autocomplete<Shopmodel>(
               displayStringForOption: (s) => s.Shopname,
               optionsBuilder: (TextEditingValue text) {
-                if (_selectedRootId == null) return const Iterable<Shopmodel>.empty();
+                if (_selectedRootId == null)
+                  return const Iterable<Shopmodel>.empty();
                 final query = text.text.toLowerCase();
                 return _shops.where((shop) {
                   final matchesRoot = shop.rootId == _selectedRootId;
                   final matchesQuery =
-                      query.isEmpty || shop.Shopname.toLowerCase().contains(query);
+                      query.isEmpty ||
+                      shop.Shopname.toLowerCase().contains(query);
                   return matchesRoot && matchesQuery;
                 });
               },
@@ -818,10 +861,12 @@ class _AddsalesState extends State<Addsales> {
                 isDense: true,
               ),
               items: _items
-                  .map((item) => DropdownMenuItem<int>(
-                        value: item.id,
-                        child: Text(item.name),
-                      ))
+                  .map(
+                    (item) => DropdownMenuItem<int>(
+                      value: item.id,
+                      child: Text(item.name),
+                    ),
+                  )
                   .toList(),
             ),
           ],
@@ -928,6 +973,55 @@ class _AddsalesState extends State<Addsales> {
     );
   }
 
+  Widget _buildQTYField() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            spreadRadius: 0,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'QTY',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: _qtyController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: '0.00',
+                suffixText: 'qty',
+                filled: true,
+                fillColor: const Color(0xFFF5F7FA),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(color: Colors.black),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                isDense: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCartItem(int index) {
     final item = _cartItems[index];
     return Card(
@@ -953,7 +1047,11 @@ class _AddsalesState extends State<Addsales> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18), // smaller icon
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
+                    size: 18,
+                  ), // smaller icon
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () => _removeFromCart(index),

@@ -54,8 +54,21 @@ class ReceiptBuilder {
     }
 
     bytes += generator.hr();
+    double totalDiscount = cartItems.fold(0.0, (sum, item) => sum + item.discount);
+    bytes += generator.text("TOTAL DISCOUNT: RS ${totalDiscount.toStringAsFixed(2)}",
+        styles: PosStyles(align: PosAlign.right, bold: true ));
     bytes += generator.text("TOTAL: RS ${totalAmount.toStringAsFixed(2)}",
         styles: PosStyles(align: PosAlign.right, bold: true));
+    bytes += generator.feed(2); // Adds height
+
+    // Footer Section
+    bytes += generator.text("Sales rep : MADURA WATHTHAGE F",
+        styles: PosStyles(align: PosAlign.left, bold: true));
+    bytes += generator.text("Original Print Printed on ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
+        styles: PosStyles(align: PosAlign.left));
+    bytes += generator.hr();
+    bytes += generator.text("-------Thank you----",
+        styles: PosStyles(align: PosAlign.center, bold: true));
     bytes += generator.feed(2);
 
     return bytes;
