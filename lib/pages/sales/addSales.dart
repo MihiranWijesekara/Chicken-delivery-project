@@ -263,6 +263,35 @@ class _AddsalesState extends State<Addsales> {
       return;
     }
 
+    // Show dialog to ask if user wants to print receipt
+    final bool? shouldPrint = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Print Receipt?'),
+          content: const Text(
+            'Do you want to print the receipt for this sale?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 26, 11, 167),
+              ),
+              child: const Text('Print'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // User cancelled the dialog
+    if (shouldPrint == null) return;
+
     try {
       final billNumber = _billNumberController.text;
       final date = _dateController.text;
@@ -279,27 +308,33 @@ class _AddsalesState extends State<Addsales> {
           amount: cartItem.amount,
           vatNumber: vatNumber,
           addedDate: date,
-          qty: int.tryParse(_qtyController.text), // <-- Add this line
+          qty: int.tryParse(_qtyController.text),
         );
 
         await DatabaseHelper.instance.insertSaleFIFO(newSales.toMap());
       }
 
-      // Generate and print the bill
-      await PrinterService.printReceipt(
-        shopName: _selectedShop!.Shopname,
-        billNo: billNumber,
-        date: date,
-        cartItems: _cartItems,
-        totalAmount: _totalAmount,
-        rootName: _selectedRootId != null
-            ? _roots.firstWhere((root) => root.id == _selectedRootId!).name
-            : '',
-      );
+      // Print receipt only if user chose to print
+      if (shouldPrint) {
+        await PrinterService.printReceipt(
+          shopName: _selectedShop!.Shopname,
+          billNo: billNumber,
+          date: date,
+          cartItems: _cartItems,
+          totalAmount: _totalAmount,
+          rootName: _selectedRootId != null
+              ? _roots.firstWhere((root) => root.id == _selectedRootId!).name
+              : '',
+        );
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sales saved and bill printed successfully!'),
+        SnackBar(
+          content: Text(
+            shouldPrint
+                ? 'Sales saved and bill printed successfully!'
+                : 'Sales saved successfully!',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -310,6 +345,7 @@ class _AddsalesState extends State<Addsales> {
         _selectedShop = null;
         _selectedRootId = null;
         _vatController.clear();
+        _qtyController.clear();
       });
 
       // Generate new bill number for next sale

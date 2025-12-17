@@ -66,7 +66,7 @@ class DashboardPage extends StatelessWidget {
           // Navigate to Items page
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const Allstockdashboard( )),
+            MaterialPageRoute(builder: (context) => const Allstockdashboard()),
           );
         },
       ),
@@ -267,20 +267,20 @@ class _DashboardCardState extends State<_DashboardCard>
               widget.cardData.onTap();
             },
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       widget.cardData.icon,
-                      size: 32,
+                      size: 30,
                       color: Colors.white,
                     ),
                   ),
@@ -294,12 +294,12 @@ class _DashboardCardState extends State<_DashboardCard>
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     widget.cardData.subtitle,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.9),
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: FontWeight.w400,
                     ),
                   ),
