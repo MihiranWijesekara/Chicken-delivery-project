@@ -23,6 +23,8 @@ class _AddsalesState extends State<Addsales> {
   final _vatController = TextEditingController();
   final _dateController = TextEditingController();
   final _qtyController = TextEditingController(); // <-- Add this line
+  final _kgController = TextEditingController();
+  final _gramController = TextEditingController();
 
   DateTime? _selectedDate;
   int? _selectedItemId;
@@ -62,6 +64,9 @@ class _AddsalesState extends State<Addsales> {
     _billNumberController.dispose();
     _vatController.dispose();
     _dateController.dispose();
+    _qtyController.dispose();
+    _kgController.dispose();
+    _gramController.dispose();
     super.dispose();
   }
 
@@ -979,29 +984,111 @@ class _AddsalesState extends State<Addsales> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Weight (kg)',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            Text(
+              'Weight',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: const Color.fromARGB(255, 0, 0, 0),
+              ),
             ),
             const SizedBox(height: 6),
-            TextFormField(
-              controller: _weightController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                hintText: '0.00',
-                suffixText: 'kg',
-                filled: true,
-                fillColor: const Color(0xFFF5F7FA),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: const BorderSide(color: Colors.black),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _kgController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(fontSize: 14),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      hintText: 'Kg',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFF5F7FA),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Colors.black, width: 1),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Colors.black, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Colors.black, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      isDense: true,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'kg?';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Invalid';
+                      }
+                      if (int.parse(value) < 0) {
+                        return 'Invalid';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _gramController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(fontSize: 14),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      hintText: 'Gram',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFF5F7FA),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Colors.black, width: 1),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Colors.black, width: 1),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Colors.black, width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      isDense: true,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'gram?';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Invalid';
+                      }
+                      if (int.parse(value) < 0 || int.parse(value) > 999) {
+                        return '0-999';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
-                isDense: true,
-              ),
+              ],
             ),
           ],
         ),
