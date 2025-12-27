@@ -655,7 +655,7 @@ class _AllstockState extends State<Allstock> {
                         SizedBox(
                           width: 50,
                           child: Text(
-                            'R-Stock',
+                            'Remaining\nStock',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 10,
@@ -773,7 +773,8 @@ class _AllstockState extends State<Allstock> {
                                 SizedBox(
                                   width: 45,
                                   child: Text(
-                                    stock.quantity_grams?.toString() ?? 'N/A',
+                                    // stock.quantity_grams?.toString() ?? 'N/A',
+                                    '${stock.quantity_grams != null ? (stock.quantity_grams! / 1000).toStringAsFixed(3) : '0.000'} Kg',
                                     style: const TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
@@ -806,8 +807,7 @@ class _AllstockState extends State<Allstock> {
                                 SizedBox(
                                   width: 50,
                                   child: Text(
-                                    stock.remain_quantity?.toStringAsFixed(1) ??
-                                        'N/A',
+                                    '${stock.remain_quantity != null ? (stock.remain_quantity! / 1000).toStringAsFixed(3) : '0.000'} Kg',
                                     style: const TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,

@@ -250,6 +250,17 @@ class _ItemPageState extends State<ItemPage> {
                         ),
                       ),
                     ),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        'Short Code',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    ),
                     SizedBox(
                       width: 70,
                       child: Text(
@@ -345,6 +356,18 @@ class _ItemPageState extends State<ItemPage> {
                                   flex: 3,
                                   child: Text(
                                     item.name,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[800],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(
+                                    item.shortCode ?? '',
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Colors.grey[800],

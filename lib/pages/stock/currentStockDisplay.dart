@@ -471,7 +471,7 @@ class _StockDisplayState extends State<StockDisplay> {
                           ),
                         ),
                         Text(
-                          '${stock.quantity_grams ?? 0} g',
+                          '${stock.quantity_grams != null ? (stock.quantity_grams! / 1000).toStringAsFixed(3) : '0.000'} Kg',
                           style: TextStyle(
                             fontSize: fontSizeSmall,
                             color: Colors.grey[900],
@@ -509,7 +509,8 @@ class _StockDisplayState extends State<StockDisplay> {
                           ),
                         ),
                         Text(
-                          '${stock.remain_quantity?.toStringAsFixed(1) ?? '0'} Kg',
+                          // '${stock.remain_quantity?.toStringAsFixed(1) ?? '0'} Kg',
+                          '${stock.remain_quantity != null ? (stock.remain_quantity! / 1000).toStringAsFixed(3) : '0.000'} Kg',
                           style: TextStyle(
                             fontSize: fontSizeSmall,
                             color: Colors.orange[700],
@@ -549,7 +550,7 @@ class _StockDisplayState extends State<StockDisplay> {
                 Expanded(
                   child: _buildDetailItem(
                     'Weight',
-                    '${stock.quantity_grams ?? 0} g',
+                    '${stock.quantity_grams != null ? (stock.quantity_grams! / 1000).toStringAsFixed(3) : '0.000'} Kg',
                     Icons.scale,
                     iconSize,
                     fontSizeSmall,
@@ -586,7 +587,7 @@ class _StockDisplayState extends State<StockDisplay> {
             SizedBox(height: padding * 0.4),
             _buildDetailItemWithoutIcon(
               'Remaining Stock',
-              '${stock.remain_quantity?.toStringAsFixed(1) ?? '0'} Kg',
+              '${stock.remain_quantity != null ? (stock.remain_quantity! / 1000).toStringAsFixed(3) : '0.000'} Kg',
               fontSizeSmall,
               fontSizeSubtitle,
               padding,

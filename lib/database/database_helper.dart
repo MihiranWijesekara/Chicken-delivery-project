@@ -35,7 +35,8 @@ class DatabaseHelper {
       CREATE TABLE items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        price REAL NOT NULL
+        price REAL NOT NULL,
+        short_code TEXT
       )
     ''');
 
@@ -319,16 +320,18 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getSalesByMonths(int month) async {
     final db = await database;
     final paddedMonth = month.toString().padLeft(2, '0');
-    return await db.rawQuery('''
+    return await db.rawQuery(
+      '''
       SELECT Sales.*, items.name as item_name, shops.shop_name
       FROM Sales
       LEFT JOIN items ON Sales.item_id = items.id
       LEFT JOIN shops ON Sales.shop_id = shops.id
       WHERE added_date LIKE ? OR added_date LIKE ?
       ORDER BY Sales.id DESC
-    ''', ['%/$paddedMonth/%', '%/$month/%']);
+    ''',
+      ['%/$paddedMonth/%', '%/$month/%'],
+    );
   }
-
 
   //Today sales
   Future<List<Map<String, dynamic>>> getTodaySales() async {

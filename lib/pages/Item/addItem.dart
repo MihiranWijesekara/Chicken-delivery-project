@@ -15,11 +15,13 @@ class AddItemPage extends StatefulWidget {
 class _AddItemPageState extends State<AddItemPage> {
   final _formKey = GlobalKey<FormState>();
   final _itemNameController = TextEditingController();
+  final _shortCodeController = TextEditingController();
   final _sellingRateController = TextEditingController();
 
   @override
   void dispose() {
     _itemNameController.dispose();
+    _shortCodeController.dispose();
     _sellingRateController.dispose();
     super.dispose();
   }
@@ -27,14 +29,16 @@ class _AddItemPageState extends State<AddItemPage> {
   void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Save item logic here
         final itemName = _itemNameController.text;
+        final shortCode = _shortCodeController.text;
         final sellingRate = double.parse(_sellingRateController.text);
 
-        // Return the data to previous screen
-
-        final newItem = ItemModel(name: itemName, price: sellingRate);
-
+        // Update ItemModel and DB logic to include shortCode if needed
+        final newItem = ItemModel(
+          name: itemName,
+          price: sellingRate,
+          shortCode: shortCode,
+        );
         final id = await DatabaseHelper.instance.insertItem(newItem);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -44,14 +48,13 @@ class _AddItemPageState extends State<AddItemPage> {
           ),
         );
 
-        // Return the data to previous screen
         Navigator.pop(context, {
           'id': id,
           'name': itemName,
+          'shortCode': shortCode,
           'price': sellingRate,
         });
       } catch (e) {
-        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
@@ -166,6 +169,51 @@ class _AddItemPageState extends State<AddItemPage> {
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter item name';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Short Code',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _shortCodeController,
+                          decoration: InputDecoration(
+                            hintText: 'Enter short code (e.g. FC)',
+                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F7FA),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter short code';
+                            }
+                            // Only allow 1 or 2 words, each word only letters, separated by space or not
+                            final words = value.trim().split(RegExp(r'\s+'));
+                            if (words.length < 1 || words.length > 2) {
+                              return 'Short code must be 1 or 2 words';
+                            }
+                            for (final w in words) {
+                              if (!RegExp(
+                                r'^[A-Za-z]{1,4} 0-]*',
+                              ).hasMatch(w)) {
+                                return 'Only letters allowed';
+                              }
                             }
                             return null;
                           },
