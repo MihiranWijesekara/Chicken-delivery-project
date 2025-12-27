@@ -126,13 +126,13 @@ class _AllstockState extends State<Allstock> {
       text: stock.QTY?.toString() ?? '',
     );
     final weightController = TextEditingController(
-      text: stock.quantity_kg?.toString() ?? '',
+      text: stock.quantity_grams?.toString() ?? '',
     );
     final rateController = TextEditingController(
       text: stock.stock_price.toString(),
     );
     final amountController = TextEditingController(
-      text: (stock.amount ?? (stock.stock_price * (stock.quantity_kg ?? 0)))
+      text: (stock.amount ?? (stock.stock_price * (stock.quantity_grams ?? 0)))
           .toString(),
     );
     final remainController = TextEditingController(
@@ -257,7 +257,7 @@ class _AllstockState extends State<Allstock> {
                   item_id: selectedItemId!,
                   stock_price:
                       int.tryParse(rateController.text) ?? stock.stock_price,
-                  quantity_kg: int.tryParse(weightController.text),
+                  quantity_grams: int.tryParse(weightController.text),
                   remain_quantity: double.tryParse(remainController.text),
                   amount: double.tryParse(amountController.text),
                   QTY: double.tryParse(qtyController.text),
@@ -773,7 +773,7 @@ class _AllstockState extends State<Allstock> {
                                 SizedBox(
                                   width: 45,
                                   child: Text(
-                                    stock.quantity_kg?.toString() ?? 'N/A',
+                                    stock.quantity_grams?.toString() ?? 'N/A',
                                     style: const TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,

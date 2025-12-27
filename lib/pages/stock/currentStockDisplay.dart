@@ -56,13 +56,13 @@ class _StockDisplayState extends State<StockDisplay> {
 
     int? selectedItemId = stock.item_id;
     final qtyController = TextEditingController(
-      text: stock.quantity_kg?.toString() ?? '',
+      text: stock.quantity_grams?.toString() ?? '',
     );
     final rateController = TextEditingController(
       text: stock.stock_price.toString(),
     );
     final amountController = TextEditingController(
-      text: (stock.amount ?? (stock.stock_price * (stock.quantity_kg ?? 0)))
+      text: (stock.amount ?? (stock.stock_price * (stock.quantity_grams ?? 0)))
           .toString(),
     );
     final remainController = TextEditingController(
@@ -181,7 +181,7 @@ class _StockDisplayState extends State<StockDisplay> {
                   item_id: selectedItemId!,
                   stock_price:
                       int.tryParse(rateController.text) ?? stock.stock_price,
-                  quantity_kg: int.tryParse(qtyController.text),
+                  quantity_grams: int.tryParse(qtyController.text),
                   remain_quantity: double.tryParse(remainController.text),
                   amount: double.tryParse(amountController.text),
                   added_date: dateController.text,
@@ -471,7 +471,7 @@ class _StockDisplayState extends State<StockDisplay> {
                           ),
                         ),
                         Text(
-                          '${stock.quantity_kg ?? 0} Kg',
+                          '${stock.quantity_grams ?? 0} g',
                           style: TextStyle(
                             fontSize: fontSizeSmall,
                             color: Colors.grey[900],
@@ -549,7 +549,7 @@ class _StockDisplayState extends State<StockDisplay> {
                 Expanded(
                   child: _buildDetailItem(
                     'Weight',
-                    '${stock.quantity_kg ?? 0} Kg',
+                    '${stock.quantity_grams ?? 0} g',
                     Icons.scale,
                     iconSize,
                     fontSizeSmall,

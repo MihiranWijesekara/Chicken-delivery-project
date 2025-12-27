@@ -71,7 +71,10 @@ class _AddStockPageState extends State<AddStockPage> {
     if (_formKey.currentState!.validate()) {
       final itemId = _selectedItemId;
       final sellingRate = double.parse(_sellingRateController.text);
-      final weight = double.parse(_weightController.text);
+      // Calculate total grams from kg and gram fields
+      final kg = int.tryParse(_kgController.text) ?? 0;
+      final gram = int.tryParse(_gramController.text) ?? 0;
+      final weight = (kg * 1000) + gram;
       final amount = double.parse(_amountController.text);
       final qty = double.parse(_qtyController.text);
       final date = _dateController.text;
@@ -79,9 +82,9 @@ class _AddStockPageState extends State<AddStockPage> {
       final newStock = StockModel(
         item_id: itemId!,
         stock_price: sellingRate.toInt(),
-        quantity_kg: weight.toInt(),
+        quantity_grams: weight.toInt(),
         amount: amount,
-        remain_quantity: weight,
+        remain_quantity: weight.toInt().toDouble(),
         QTY: qty,
         added_date: date,
       );
@@ -276,6 +279,7 @@ class _AddStockPageState extends State<AddStockPage> {
                         TextFormField(
                           controller: _sellingRateController,
                           keyboardType: TextInputType.number,
+                          enableInteractiveSelection: true,
                           style: TextStyle(fontSize: 14),
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(

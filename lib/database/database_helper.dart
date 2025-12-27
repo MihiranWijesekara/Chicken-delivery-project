@@ -60,9 +60,9 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         item_id INTEGER NOT NULL,
         stock_price INTEGER NOT NULL,
-        quantity_kg INTEGER,
-        remain_quantity REAL,
-        amount REAL DEFAULT 0,            -- NEW COLUMN
+        quantity_grams  INTEGER,           -- Total stock in grams
+        remain_quantity INTEGER,           -- Remaining stock in grams
+        amount REAL DEFAULT 0,             -- NEW COLUMN
         QTY REAL,
         added_date TEXT,
         FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE SET NULL
@@ -76,7 +76,7 @@ class DatabaseHelper {
         shop_id INTEGER,
         item_id INTEGER NOT NULL,
         selling_price INTEGER NOT NULL,
-        quantity_kg INTEGER,
+        quantity_grams INTEGER,
         amount REAL DEFAULT 0,            -- NEW COLUMN
         Vat_Number TEXT,
         QTY INTEGER,
@@ -114,8 +114,8 @@ class DatabaseHelper {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           item_id INTEGER NOT NULL,
           stock_price INTEGER NOT NULL,
-          quantity_kg INTEGER,
-          remain_quantity REAL,
+          quantity_grams INTEGER,
+          remain_quantity INTEGER,
           amount REAL DEFAULT 0,
           QTY REAL,
           added_date TEXT,
@@ -142,7 +142,7 @@ class DatabaseHelper {
           shop_id INTEGER,
           item_id INTEGER NOT NULL,
           selling_price INTEGER NOT NULL,
-          quantity_kg INTEGER,
+          quantity_grams INTEGER,
           amount REAL DEFAULT 0,
           Vat_Number TEXT,
           added_date TEXT,
@@ -200,7 +200,7 @@ class DatabaseHelper {
   Future<int> insertSaleFIFO(Map<String, dynamic> sale) async {
     final db = await database;
     final itemId = sale['item_id'];
-    num qtyToSell = (sale['quantity_kg'] as num);
+    num qtyToSell = (sale['quantity_grams'] as num);
 
     if (qtyToSell <= 0) {
       throw Exception('Quantity must be greater than 0');
@@ -249,7 +249,7 @@ class DatabaseHelper {
 
       // Calculate amount for the sale
       sale['amount'] =
-          (sale['quantity_kg'] as int) * (sale['selling_price'] as int);
+          (sale['quantity_grams'] as int) * (sale['selling_price'] as int);
 
       // Insert sale
       final saleId = await txn.insert('Sales', sale);
@@ -329,23 +329,6 @@ class DatabaseHelper {
     ''', ['%/$paddedMonth/%', '%/$month/%']);
   }
 
-  // Future<List<StockModel>> getStockByMonth(int month) async {
-  //   final db = await database;
-  //   final paddedMonth = month.toString().padLeft(2, '0');
-
-  //   final result = await db.rawQuery(
-  //     '''
-  //     SELECT Stock.*, items.name as item_name
-  //     FROM Stock
-  //     LEFT JOIN items ON Stock.item_id = items.id
-  //    WHERE added_date LIKE ? OR added_date LIKE ?
-  //   ORDER BY Stock.id ASC
-  // ''',
-  //     ['%/$paddedMonth/%', '%/$month/%'],
-  //   );
-
-  //   return result.map((m) => StockModel.fromMap(m)).toList();
-  // }
 
   //Today sales
   Future<List<Map<String, dynamic>>> getTodaySales() async {
