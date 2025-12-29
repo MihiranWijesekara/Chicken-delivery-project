@@ -606,18 +606,6 @@ class _TodaysalesState extends State<Todaysales> {
                                 SizedBox(
                                   width: 25,
                                   child: Text(
-                                    Sales.shortCode ?? '',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: const Color.fromARGB(255, 0, 0, 0),
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 25,
-                                  child: Text(
                                     Sales.quantityKg?.toString() ?? '0',
                                     style: TextStyle(
                                       fontSize: 10,

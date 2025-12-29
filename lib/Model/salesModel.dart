@@ -1,23 +1,21 @@
 class Salesmodel {
-   final int? id;
+  final int? id;
   final String billNo;
   final int? shopId;
   final int itemId;
-  final String? shortCode;
   final int sellingPrice;
   final int? quantityKg;
   final double? amount;
   final String? vatNumber;
   final String? addedDate;
   final String? shopName;
-  final int? qty; 
+  final int? qty;
 
   Salesmodel({
     this.id,
     required this.billNo,
     this.shopId,
     required this.itemId,
-    this.shortCode,
     required this.sellingPrice,
     this.quantityKg,
     this.amount,
@@ -34,7 +32,6 @@ class Salesmodel {
       'bill_no': billNo,
       'shop_id': shopId,
       'item_id': itemId,
-      'short_code': shortCode,
       'selling_price': sellingPrice,
       'quantity_kg': quantityKg,
       'amount': amount,
@@ -51,7 +48,6 @@ class Salesmodel {
       billNo: map['bill_no'],
       shopId: map['shop_id'],
       itemId: map['item_id'],
-      shortCode: map['short_code'],
       sellingPrice: map['selling_price'],
       quantityKg: map['quantity_kg'],
       amount: map['amount'],
@@ -61,6 +57,4 @@ class Salesmodel {
       qty: map['QTY'],
     );
   }
-
-  
 }

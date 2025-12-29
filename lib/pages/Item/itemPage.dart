@@ -364,18 +364,6 @@ class _ItemPageState extends State<ItemPage> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                Expanded(
-                                  flex: 3,
-                                  child: Text(
-                                    item.shortCode ?? '',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[800],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
                                 SizedBox(
                                   width: 70,
                                   child: Text(

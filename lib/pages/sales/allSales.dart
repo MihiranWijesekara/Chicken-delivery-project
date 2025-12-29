@@ -684,18 +684,6 @@ class _AllsalesState extends State<Allsales> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 30,
-                                  child: Text(
-                                    saless.shortCode ?? '',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: const Color.fromARGB(255, 0, 0, 0),
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                SizedBox(
                                   width: 40,
                                   child: Text(
                                     saless.quantityKg?.toString() ?? '0',
