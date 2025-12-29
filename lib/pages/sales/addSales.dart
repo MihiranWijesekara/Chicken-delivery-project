@@ -18,7 +18,6 @@ class Addsales extends StatefulWidget {
 class _AddsalesState extends State<Addsales> {
   final _formKey = GlobalKey<FormState>();
   final _sellingRateController = TextEditingController();
-  final _weightController = TextEditingController();
   final _billNumberController = TextEditingController();
   final _vatController = TextEditingController();
   final _dateController = TextEditingController();
@@ -60,7 +59,6 @@ class _AddsalesState extends State<Addsales> {
   @override
   void dispose() {
     _sellingRateController.dispose();
-    _weightController.dispose();
     _billNumberController.dispose();
     _vatController.dispose();
     _dateController.dispose();
@@ -167,7 +165,14 @@ class _AddsalesState extends State<Addsales> {
   }
 
   void _addToCart() {
+    debugPrint('--- _addToCart called ---');
+    debugPrint('Selected item id: [32m$_selectedItemId[0m');
+    debugPrint('Selling rate: [32m${_sellingRateController.text}[0m');
+    debugPrint(
+      'KG: [32m${_kgController.text}[0m, Gram: [32m${_gramController.text}[0m',
+    );
     if (_selectedItemId == null) {
+      debugPrint('No item selected.');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select an item'),
@@ -177,19 +182,36 @@ class _AddsalesState extends State<Addsales> {
       return;
     }
 
-    if (_sellingRateController.text.isEmpty || _weightController.text.isEmpty) {
+    if (_sellingRateController.text.isEmpty ||
+        (_kgController.text.isEmpty && _gramController.text.isEmpty)) {
+      debugPrint('Selling rate or both kg and gram are empty.');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter selling price and weight'),
+          content: Text('Please enter selling price and weight (kg or gram)'),
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
 
-    // Validate weight is a valid number and > 0
-    final weight = double.tryParse(_weightController.text);
-    if (weight == null || weight <= 0) {
+    // Parse kg and gram, default to 0 if empty
+    final kg = int.tryParse(_kgController.text) ?? 0;
+    final gram = int.tryParse(_gramController.text) ?? 0;
+    debugPrint('Parsed kg: $kg, gram: $gram');
+    if (kg < 0 || gram < 0 || gram > 999) {
+      debugPrint('Invalid kg or gram value.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid kg or gram value'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    final weight = kg + (gram / 1000);
+    debugPrint('Calculated weight: $weight');
+    if (weight <= 0) {
+      debugPrint('Weight <= 0');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a valid weight greater than 0'),
@@ -198,17 +220,21 @@ class _AddsalesState extends State<Addsales> {
       );
       return;
     }
+    // Set the weightController for compatibility (if needed elsewhere)
 
     final selectedItem = _items.firstWhere(
       (item) => item.id == _selectedItemId,
     );
     final originalPrice = selectedItem.price;
     final sellingPrice = double.parse(_sellingRateController.text);
-    // Use the already parsed 'weight' variable above
     final amount = sellingPrice * weight;
     final discount = (originalPrice > sellingPrice)
         ? (originalPrice - sellingPrice) * weight
         : 0.0;
+
+    debugPrint(
+      'originalPrice: $originalPrice, sellingPrice: $sellingPrice, amount: $amount, discount: $discount',
+    );
 
     setState(() {
       _cartItems.add(
@@ -226,8 +252,11 @@ class _AddsalesState extends State<Addsales> {
       // Clear fields
       _selectedItemId = null;
       _sellingRateController.clear();
-      _weightController.clear();
+      _kgController.clear();
+      _gramController.clear();
     });
+
+    debugPrint('Cart items count: ${_cartItems.length}');
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -260,7 +289,11 @@ class _AddsalesState extends State<Addsales> {
   }
 
   Future<void> _saveAllSales() async {
+    debugPrint('--- _saveAllSales called ---');
+    debugPrint('Cart items: ${_cartItems.length}');
+    debugPrint('Selected shop: $_selectedShop');
     if (_cartItems.isEmpty) {
+      debugPrint('Cart is empty.');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Cart is empty. Add items first.'),
@@ -271,6 +304,7 @@ class _AddsalesState extends State<Addsales> {
     }
 
     if (_selectedShop == null) {
+      debugPrint('No shop selected.');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a shop'),
@@ -307,32 +341,82 @@ class _AddsalesState extends State<Addsales> {
     );
 
     // User cancelled the dialog
-    if (shouldPrint == null) return;
+    if (shouldPrint == null) {
+      debugPrint('User cancelled print dialog.');
+      return;
+    }
 
     try {
       final billNumber = _billNumberController.text;
       final date = _dateController.text;
       final vatNumber = _vatController.text;
+      debugPrint(
+        'Saving sales: billNo=$billNumber, date=$date, vat=$vatNumber',
+      );
 
       // Save each cart item to database
+      // for (var cartItem in _cartItems) {
+      //   debugPrint(
+      //     'Saving cartItem: itemId=${cartItem.itemId}, weight=${cartItem.weight}, amount=${cartItem.amount}',
+      //   );
+      //   final newSales = Salesmodel(
+      //     billNo: billNumber,
+      //     shopId: _selectedShop!.id,
+      //     itemId: cartItem.itemId,
+      //     sellingPrice: cartItem.sellingPrice.toInt(),
+      //     quantityKg: cartItem.weight.toInt(),
+      //     amount: cartItem.amount,
+      //     vatNumber: vatNumber,
+      //     addedDate: date,
+      //     qty: int.tryParse(_qtyController.text),
+      //   );
+
+      //   await DatabaseHelper.instance.insertSaleFIFO(newSales.toMap());
+      // }
+
       for (var cartItem in _cartItems) {
+        final int qtyGrams = (cartItem.weight * 1000)
+            .round(); // ✅ convert kg -> grams
+
+        if (qtyGrams <= 0) {
+          throw Exception('Invalid quantity (grams). Check KG/Gram inputs.');
+        }
+
         final newSales = Salesmodel(
           billNo: billNumber,
           shopId: _selectedShop!.id,
           itemId: cartItem.itemId,
+
+          // store as int if your DB column is int (price per KG)
           sellingPrice: cartItem.sellingPrice.toInt(),
-          quantityKg: cartItem.weight.toInt(),
+
+          // ❌ don't do this: cartItem.weight.toInt()
+          // ✅ instead pass grams through map (see below)
+          quantityKg: cartItem.weight
+              .toInt(), // convert double to int for quantityKg
+
           amount: cartItem.amount,
           vatNumber: vatNumber,
           addedDate: date,
           qty: int.tryParse(_qtyController.text),
         );
 
-        await DatabaseHelper.instance.insertSaleFIFO(newSales.toMap());
+        final saleMap = newSales.toMap();
+
+        // ✅ this is what insertSaleFIFO expects
+        saleMap['quantity_grams'] = qtyGrams;
+
+        // ✅ make sure these keys match your DB columns
+        // If your Sales table expects item_id / selling_price, ensure these exist:
+        saleMap['item_id'] = cartItem.itemId;
+        saleMap['selling_price'] = cartItem.sellingPrice.toInt();
+
+        await DatabaseHelper.instance.insertSaleFIFO(saleMap);
       }
 
       // Print receipt only if user chose to print
       if (shouldPrint) {
+        debugPrint('Printing receipt...');
         await PrinterService.printReceipt(
           shopName: _selectedShop!.Shopname,
           billNo: billNumber,
@@ -366,8 +450,10 @@ class _AddsalesState extends State<Addsales> {
       });
 
       // Generate new bill number for next sale
+      debugPrint('Generating new bill number...');
       _generateBillNumber();
     } catch (e) {
+      debugPrint('Error saving sales: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error saving sales: $e'),
