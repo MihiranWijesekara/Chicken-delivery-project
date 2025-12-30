@@ -564,28 +564,6 @@ class _TodaysalesState extends State<Todaysales> {
                                                         color: Colors.grey[600],
                                                       ),
                                                     ),
-                                                    const SizedBox(width: 10),
-                                                    Icon(
-                                                      Icons.attach_money,
-                                                      size: 10,
-                                                      color: Colors.grey[500],
-                                                    ),
-                                                    Text(
-                                                      totalAmount
-                                                          .toStringAsFixed(2),
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color:
-                                                            const Color.fromARGB(
-                                                              255,
-                                                              26,
-                                                              11,
-                                                              167,
-                                                            ),
-                                                      ),
-                                                    ),
                                                   ],
                                                 ),
                                               ],
@@ -727,7 +705,7 @@ class _TodaysalesState extends State<Todaysales> {
                                               SizedBox(
                                                 width: 50,
                                                 child: Text(
-                                                  '${sale.quantityKg ?? 0} kg',
+                                                  '${((sale.quantityKg ?? 0) / 1000).toStringAsFixed(2)} kg',
                                                   textAlign: TextAlign.center,
                                                   style: TextStyle(
                                                     fontSize: 12,
@@ -771,7 +749,7 @@ class _TodaysalesState extends State<Todaysales> {
                                                       child: Container(
                                                         padding:
                                                             const EdgeInsets.all(
-                                                              6,
+                                                              4,
                                                             ),
                                                         decoration: BoxDecoration(
                                                           color: Colors.blue
@@ -795,7 +773,7 @@ class _TodaysalesState extends State<Todaysales> {
                                                       child: Container(
                                                         padding:
                                                             const EdgeInsets.all(
-                                                              6,
+                                                              4,
                                                             ),
                                                         decoration: BoxDecoration(
                                                           color: Colors.red

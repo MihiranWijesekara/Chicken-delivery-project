@@ -442,7 +442,7 @@ class _StockDisplayState extends State<StockDisplay> {
         child: ExpansionTile(
           tilePadding: EdgeInsets.symmetric(
             horizontal: padding,
-            vertical: padding * 0.5,
+            vertical: padding * 0.1,
           ),
           childrenPadding: EdgeInsets.fromLTRB(padding, 0, padding, padding),
           title: Row(
@@ -451,6 +451,7 @@ class _StockDisplayState extends State<StockDisplay> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SizedBox(height: 3), // Optional: add spacing
                     Text(
                       stock.item_name ?? 'Unknown Item',
                       style: TextStyle(
@@ -459,7 +460,15 @@ class _StockDisplayState extends State<StockDisplay> {
                         color: Colors.grey[900],
                       ),
                     ),
-                    SizedBox(height: padding * 0.5),
+                    // Add date at the top
+                    Text(
+                      stock.added_date ?? '',
+                      style: TextStyle(
+                        fontSize: fontSizeSmall,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     Row(
                       children: [
                         Text(
@@ -478,7 +487,7 @@ class _StockDisplayState extends State<StockDisplay> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        SizedBox(width: padding),
+                        SizedBox(width: padding * 0.5),
                         Text(
                           'Amount: ',
                           style: TextStyle(
@@ -520,14 +529,6 @@ class _StockDisplayState extends State<StockDisplay> {
                       ],
                     ),
                   ],
-                ),
-              ),
-              Text(
-                stock.added_date ?? '',
-                style: TextStyle(
-                  fontSize: fontSizeSmall,
-                  color: Colors.grey[500],
-                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
