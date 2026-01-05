@@ -564,10 +564,64 @@ class DatabaseHelper {
     return await db.delete('Stock', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Delete sale
+  // Delete sale and restore stock
   Future<int> deleteSale(int id) async {
     final db = await database;
-    return await db.delete('Sales', where: 'id = ?', whereArgs: [id]);
+    return await db.transaction<int>((txn) async {
+      // Get the sale to know how much stock to restore
+      final saleList = await txn.query(
+        'Sales',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      if (saleList.isEmpty) return 0;
+
+      final sale = saleList.first;
+      final itemId = sale['item_id'] as int;
+      final quantityToRestore = (sale['quantity_grams'] ?? 0) as num;
+
+      // Restore stock in reverse FIFO order (newest stock first)
+      if (quantityToRestore > 0) {
+        final stockList = await txn.query(
+          'Stock',
+          where: 'item_id = ?',
+          whereArgs: [itemId],
+          orderBy: 'added_date DESC, id DESC',
+        );
+
+        num remainingToRestore = quantityToRestore.toDouble();
+
+        for (var stock in stockList) {
+          if (remainingToRestore <= 0) break;
+
+          final currentRemain = ((stock['remain_quantity'] ?? 0) as num)
+              .toDouble();
+          final totalQty = ((stock['quantity_grams'] ?? 0) as num).toDouble();
+          final canRestore = totalQty - currentRemain; // How much was sold
+
+          if (canRestore > 0) {
+            final restoreAmount = remainingToRestore > canRestore
+                ? canRestore
+                : remainingToRestore;
+
+            final newRemain = currentRemain + restoreAmount;
+
+            await txn.update(
+              'Stock',
+              {'remain_quantity': newRemain},
+              where: 'id = ?',
+              whereArgs: [stock['id']],
+            );
+
+            remainingToRestore -= restoreAmount;
+          }
+        }
+      }
+
+      // Delete the sale
+      return await txn.delete('Sales', where: 'id = ?', whereArgs: [id]);
+    });
   }
 
   // Get next bill number

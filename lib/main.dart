@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Chicken Delivery',
+      title: 'Chicken Sales',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(),
       home: const DashboardPage(),

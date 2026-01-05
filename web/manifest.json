@@ -1,6 +1,6 @@
 {
-    "name": "chicken_dilivery",
-    "short_name": "chicken_dilivery",
+    "name": "Chicken Sales",
+    "short_name": "Chicken Sales",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

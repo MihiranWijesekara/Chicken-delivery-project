@@ -75,8 +75,8 @@ class _AddStockPageState extends State<AddStockPage> {
       final kg = int.tryParse(_kgController.text) ?? 0;
       final gram = int.tryParse(_gramController.text) ?? 0;
       final weight = (kg * 1000) + gram;
-      final amount = double.parse(_amountController.text);
-      final qty = double.parse(_qtyController.text);
+      final amount = double.tryParse(_amountController.text) ?? 0.0;
+      final qty = double.tryParse(_qtyController.text) ?? 0.0;
       final date = _dateController.text;
 
       final newStock = StockModel(

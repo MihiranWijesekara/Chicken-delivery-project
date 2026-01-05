@@ -104,6 +104,7 @@ class _WeeklysalesState extends State<Weeklysales> {
               children: [
                 TextField(
                   controller: billController,
+                  enabled: false,
                   decoration: const InputDecoration(
                     labelText: 'Bill No',
                     border: OutlineInputBorder(),
@@ -137,14 +138,16 @@ class _WeeklysalesState extends State<Weeklysales> {
                 TextField(
                   controller: quantityController,
                   decoration: const InputDecoration(
-                    labelText: 'Quantity (Kg)',
+                    labelText: 'Quantity (g)',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
                   onChanged: (_) => setDialogState(() {
-                    final qty = double.tryParse(quantityController.text) ?? 0;
+                    final qtyGrams =
+                        double.tryParse(quantityController.text) ?? 0;
+                    final qtyKg = qtyGrams / 1000; // Convert grams to kg
                     final rate = double.tryParse(rateController.text) ?? 0;
-                    amountController.text = (qty * rate).toStringAsFixed(2);
+                    amountController.text = (qtyKg * rate).toStringAsFixed(2);
                   }),
                 ),
                 const SizedBox(height: 12),
@@ -156,9 +159,11 @@ class _WeeklysalesState extends State<Weeklysales> {
                   ),
                   keyboardType: TextInputType.number,
                   onChanged: (_) => setDialogState(() {
-                    final qty = double.tryParse(quantityController.text) ?? 0;
+                    final qtyGrams =
+                        double.tryParse(quantityController.text) ?? 0;
+                    final qtyKg = qtyGrams / 1000; // Convert grams to kg
                     final rate = double.tryParse(rateController.text) ?? 0;
-                    amountController.text = (qty * rate).toStringAsFixed(2);
+                    amountController.text = (qtyKg * rate).toStringAsFixed(2);
                   }),
                 ),
                 const SizedBox(height: 12),
@@ -211,7 +216,7 @@ class _WeeklysalesState extends State<Weeklysales> {
                   'shop_id': sale.shopId,
                   'item_id': selectedItemId!,
                   'selling_price': int.tryParse(rateController.text) ?? 0,
-                  'quantity_kg': int.tryParse(quantityController.text),
+                  'quantity_grams': int.tryParse(quantityController.text),
                   'amount': double.tryParse(amountController.text),
                   'Vat_Number': sale.vatNumber,
                   'added_date': dateController.text,
