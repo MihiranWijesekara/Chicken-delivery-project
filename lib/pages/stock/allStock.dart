@@ -22,11 +22,37 @@ class _AllstockState extends State<Allstock> {
   int? _selectedMonth;
   int? _selectedYear;
 
+  int _currentPage = 0;
+  final int _pageSize = 30;
+
   @override
   void initState() {
     super.initState();
     _loadItems();
     _loadStocks();
+  }
+
+  List<StockModel> get _groupedStocks {
+    if (filteredStocks.isEmpty) return [];
+    final start = _currentPage * _pageSize;
+    if (start >= filteredStocks.length) return [];
+    final end = start + _pageSize;
+    return filteredStocks.sublist(
+      start,
+      end > filteredStocks.length ? filteredStocks.length : end,
+    );
+  }
+
+  int get _totalPages {
+    final total = filteredStocks.length;
+    if (total == 0) return 1;
+    return ((total + _pageSize - 1) / _pageSize).floor();
+  }
+
+  void _goToPage(int page) {
+    setState(() {
+      _currentPage = page.clamp(0, _totalPages - 1);
+    });
   }
 
   Future<void> _loadItems() async {
@@ -75,6 +101,9 @@ class _AllstockState extends State<Allstock> {
         return month == _selectedMonth && year == _selectedYear;
       }).toList();
     }
+
+    // Reset pagination when filters change.
+    _currentPage = 0;
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -119,7 +148,7 @@ class _AllstockState extends State<Allstock> {
   }
 
   void _editStock(int index) async {
-    final stock = filteredStocks[index];
+    final stock = _groupedStocks[index];
 
     int? selectedItemId = stock.item_id;
     final qtyController = TextEditingController(
@@ -282,7 +311,7 @@ class _AllstockState extends State<Allstock> {
   }
 
   void _deleteItem(int index) {
-    final stock = filteredStocks[index];
+    final stock = _groupedStocks[index];
     final id = stock.id;
     if (id == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -735,11 +764,11 @@ class _AllstockState extends State<Allstock> {
                         ),
                       )
                     : ListView.separated(
-                        itemCount: filteredStocks.length,
+                        itemCount: _groupedStocks.length,
                         separatorBuilder: (context, index) =>
                             Divider(height: 1, color: Colors.grey[200]),
                         itemBuilder: (context, index) {
-                          final stock = filteredStocks[index];
+                          final stock = _groupedStocks[index];
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -881,6 +910,32 @@ class _AllstockState extends State<Allstock> {
                       ),
               ),
             ),
+            // Pagination
+            if (!isLoading && filteredStocks.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: _currentPage > 0
+                          ? () => _goToPage(_currentPage - 1)
+                          : null,
+                    ),
+                    Text(
+                      'Page ${_currentPage + 1} of $_totalPages',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: _currentPage < _totalPages - 1
+                          ? () => _goToPage(_currentPage + 1)
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
