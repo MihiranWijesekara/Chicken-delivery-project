@@ -564,6 +564,16 @@ class _TodaysalesState extends State<Todaysales> {
                                                         color: Colors.grey[600],
                                                       ),
                                                     ),
+
+                                                    const Spacer(),
+                                                    Text(
+                                                      'Total: ${totalAmount.toStringAsFixed(2)}',
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
                                                   ],
                                                 ),
                                               ],
